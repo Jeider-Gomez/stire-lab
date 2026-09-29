@@ -1,0 +1,177 @@
+<template>
+  <div class="space-y-4">
+    <!-- Enunciado de la pregunta -->
+    <div v-if="showStatement" class="prose prose-xs text-base-texto-primario">
+      <p class="text-xs leading-relaxed whitespace-pre-wrap">{{ question.question }}</p>
+    </div>
+
+    <!-- Instrucción -->
+    <div class="text-[11px] text-base-texto-secundario bg-base-bg-secundario px-3 py-2 rounded border border-base-borde-sutil">
+      Completa los espacios en blanco dentro de la plantilla de código:
+    </div>
+
+    <!-- Bloque de código con inputs insertados en los blanks -->
+    <div class="bg-editor-bg text-editor-text rounded-lg p-4 font-mono text-xs overflow-x-auto shadow-inner border border-editor-border">
+      <div v-for="(line, lineIdx) in parsedLines" :key="lineIdx" class="leading-7 min-h-[1.75rem] flex flex-wrap items-center">
+        <template v-for="(token, tokenIdx) in line" :key="tokenIdx">
+          <!-- Fragmento de código normal (resaltado con fallback a texto plano) -->
+          <template v-if="token.type === 'text'">
+            <span
+              v-for="(span, sIdx) in (highlightedTokens[`${lineIdx}-${tokenIdx}`] || [{ text: token.value, cls: '' }])"
+              :key="sIdx"
+              :class="['whitespace-pre', span.cls || 'text-gray-300']"
+            >{{ span.text }}</span>
+          </template>
+
+          <!-- Input para el blank correspondiente -->
+          <span v-else-if="token.type === 'blank'" class="inline-flex items-center mx-1 my-0.5">
+            <input
+              type="text"
+              :id="`blank-${token.id}`"
+              v-model="blankAnswers[token.id]"
+              :placeholder="token.id"
+              class="px-2 py-0.5 bg-editor-line text-stire-teal font-mono text-xs border border-slate-600 focus:border-stire-teal focus:outline-none focus:ring-1 focus:ring-stire-teal/60 rounded transition-colors text-center"
+              :style="{ width: `${Math.max(60, (blankAnswers[token.id]?.length || token.id.length || 4) * 10 + 20)}px` }"
+            />
+          </span>
+        </template>
+      </div>
+    </div>
+
+    <!-- Estado de completitud -->
+    <div class="text-[11px] text-base-texto-secundario flex items-center justify-between pt-1">
+      <span v-if="allBlanksFilled" class="text-semantico-pasa">
+        ✔ Todos los espacios completados ({{ Object.keys(blankAnswers).length }}/{{ expectedBlankIds.length }}).
+      </span>
+      <span v-else class="text-acento-ambar-fuerte">
+        ⚠ Completa todos los espacios en blanco antes de entregar ({{ filledCount }}/{{ expectedBlankIds.length }} completados).
+      </span>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useWorkspaceStore } from '~/stores/workspace'
+import { highlightCode, type HighlightedSpan } from '~/utils/highlightCode'
+
+interface BlankConfig {
+  id: string
+  regexMode?: boolean
+}
+
+interface Props {
+  question: { id: number; type: string; question: string; config: Record<string, any> }
+  /** La pantalla del ejercicio ya muestra el enunciado con formato arriba. */
+  showStatement?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), { showStatement: true })
+const workspaceStore = useWorkspaceStore()
+
+const codeTemplate = computed<string>(() => props.question.config?.codeTemplate || '')
+const blanks = computed<BlankConfig[]>(() => props.question.config?.blanks || [])
+
+const expectedBlankIds = computed<string[]>(() => blanks.value.map(b => b.id))
+const blankAnswers = reactive<Record<string, string>>({})
+
+// Inicializar blankAnswers con los IDs esperados
+watch(
+  blanks,
+  (newBlanks) => {
+    Object.keys(blankAnswers).forEach(k => delete blankAnswers[k])
+    newBlanks.forEach(b => {
+      blankAnswers[b.id] = ''
+    })
+  },
+  { immediate: true }
+)
+
+// Parsear codeTemplate en líneas y tokens (texto o blank)
+type Token = { type: 'text'; value: string } | { type: 'blank'; id: string }
+
+const parsedLines = computed<Token[][]>(() => {
+  const lines = codeTemplate.value.split('\n')
+  return lines.map(line => {
+    const tokens: Token[] = []
+    // Los blanks siguen el patrón ___id___
+    const regex = /___([a-zA-Z0-9_-]+)___/g
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+
+    while ((match = regex.exec(line)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push({ type: 'text', value: line.substring(lastIndex, match.index) })
+      }
+      tokens.push({ type: 'blank', id: match[1] })
+      lastIndex = regex.lastIndex
+    }
+
+    if (lastIndex < line.length) {
+      tokens.push({ type: 'text', value: line.substring(lastIndex) })
+    }
+
+    // Si la línea está vacía, dejar un espacio para mantener altura
+    if (tokens.length === 0) {
+      tokens.push({ type: 'text', value: ' ' })
+    }
+
+    return tokens
+  })
+})
+
+const language = computed<string>(() => props.question.config?.language || 'text')
+const highlightedTokens = ref<Record<string, HighlightedSpan[]>>({})
+
+watch(
+  [parsedLines, language],
+  async ([lines, lang]) => {
+    if (!lang || lang === 'text') {
+      highlightedTokens.value = {}
+      return
+    }
+    const newTokens: Record<string, HighlightedSpan[]> = {}
+    await Promise.all(
+      lines.flatMap((line, lineIdx) =>
+        line.map(async (token, tokenIdx) => {
+          if (token.type === 'text') {
+            const key = `${lineIdx}-${tokenIdx}`
+            const spans = await highlightCode(token.value, lang)
+            newTokens[key] = spans
+          }
+        })
+      )
+    )
+    highlightedTokens.value = newTokens
+  },
+  { immediate: true }
+)
+
+const filledCount = computed(() => {
+  return expectedBlankIds.value.filter(id => (blankAnswers[id] || '').trim().length > 0).length
+})
+
+const allBlanksFilled = computed(() => {
+  return expectedBlankIds.value.length > 0 && filledCount.value === expectedBlankIds.value.length
+})
+
+// Sincronizar con pendingAnswer del store: { blanks: { b1: "...", b2: "..." } }
+watch(
+  blankAnswers,
+  () => {
+    if (allBlanksFilled.value) {
+      const cleanBlanks: Record<string, string> = {}
+      expectedBlankIds.value.forEach(id => {
+        cleanBlanks[id] = blankAnswers[id].trim()
+      })
+      workspaceStore.pendingAnswer = { blanks: cleanBlanks }
+    } else {
+      workspaceStore.pendingAnswer = null
+    }
+  },
+  { deep: true }
+)
+
+onMounted(() => {
+  workspaceStore.pendingAnswer = null
+})
+</script>

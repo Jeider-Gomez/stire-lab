@@ -1,0 +1,412 @@
+<template>
+  <div class="md:h-full flex flex-col md:flex-row md:overflow-hidden bg-base-bg-primario">
+    <!-- COLUMNA IZQUIERDA: Enunciado, Casos de Prueba (solo coding) y Consola. Los demás tipos usan una sola columna. -->
+    <div v-if="isCodingActivity || isHtmlCssActivity" class="w-full md:w-[45%] lg:w-[40%] flex flex-col border-r border-base-borde-sutil bg-base-blanco md:h-full max-h-[55vh] md:max-h-none overflow-hidden">
+      <!-- Pestañas de Navegación del Panel Izquierdo -->
+      <div class="flex items-center border-b border-base-borde-sutil bg-base-bg-secundario text-xs font-semibold px-2 pt-2 gap-1 flex-shrink-0">
+        <button
+          @click="leftTab = 'enunciado'"
+          class="px-3 py-2 rounded-t-md transition-colors"
+          :class="leftTab === 'enunciado' ? 'bg-base-blanco text-base-texto-primario border-t-2 border-acento-ambar-fuerte font-bold' : 'text-base-texto-secundario hover:text-base-texto-primario'">
+          <span class="inline-flex items-center gap-1.5"><BookOpen :size="14" aria-hidden="true" /> Enunciado</span>
+        </button>
+
+        <!-- Pestaña Casos de Prueba: Solo visible para coding -->
+        <button
+          v-if="isCodingActivity"
+          @click="leftTab = 'casos'"
+          class="px-3 py-2 rounded-t-md transition-colors flex items-center gap-1.5"
+          :class="leftTab === 'casos' ? 'bg-base-blanco text-base-texto-primario border-t-2 border-acento-ambar-fuerte font-bold' : 'text-base-texto-secundario hover:text-base-texto-primario'">
+          <span class="inline-flex items-center gap-1.5"><FlaskConical :size="14" aria-hidden="true" /> Casos de prueba</span>
+          <span
+            v-if="passedCount > 0"
+            class="px-1.5 py-0.2 rounded-full text-[10px]"
+            :class="passedCount === workspaceStore.publicTestCases.length ? 'bg-semantico-pasa/15 text-semantico-pasa font-bold' : 'bg-acento-ambar/15 text-acento-ambar-fuerte font-bold'">
+            {{ passedCount }}/{{ workspaceStore.publicTestCases.length }}
+          </span>
+        </button>
+
+        <button
+          @click="leftTab = 'consola'"
+          class="px-3 py-2 rounded-t-md transition-colors"
+          :class="leftTab === 'consola' ? 'bg-base-blanco text-base-texto-primario border-t-2 border-acento-ambar-fuerte font-bold' : 'text-base-texto-secundario hover:text-base-texto-primario'">
+          <span class="inline-flex items-center gap-1.5"><Terminal :size="14" aria-hidden="true" /> Registro</span>
+        </button>
+      </div>
+
+      <!-- Contenido de las Pestañas -->
+      <div class="flex-1 overflow-y-auto p-5 text-xs text-base-texto-primario leading-relaxed">
+        <!-- 1. Pestaña Enunciado -->
+        <div v-if="leftTab === 'enunciado'" class="space-y-4">
+          <div class="prose prose-xs" v-html="formatMarkdown(workspaceStore.currentExercise.description)"></div>
+
+          <div class="p-3 bg-base-bg-secundario rounded-lg border border-base-borde-sutil space-y-1">
+            <span class="font-bold text-base-texto-primario block">Cómo se califica</span>
+            <ul v-if="isCodingActivity" class="list-disc pl-4 space-y-1 text-base-texto-secundario text-[11px]">
+              <li>{{ workspaceStore.publicTestCases.length }} {{ workspaceStore.publicTestCases.length === 1 ? 'ejemplo que puedes ver' : 'ejemplos que puedes ver' }} en la pestaña «Casos de prueba» y probar con «Probar código».</li>
+              <li v-if="workspaceStore.hiddenTestCaseCount > 0">
+                {{ workspaceStore.hiddenTestCaseCount }} {{ workspaceStore.hiddenTestCaseCount === 1 ? 'caso oculto' : 'casos ocultos' }} más, que se revisan al entregar (por ejemplo, los valores límite).
+              </li>
+              <li v-else>No hay casos ocultos: lo que ves es lo que se revisa.</li>
+              <li v-if="workspaceStore.timeLimitMs">Límite de tiempo por ejecución: {{ workspaceStore.timeLimitMs }} ms.</li>
+            </ul>
+            <ul v-else-if="isHtmlCssActivity" class="list-disc pl-4 space-y-1 text-base-texto-secundario text-[11px]">
+              <li>Reglas públicas visibles en el panel de evaluación.</li>
+              <li>Puntaje proporcional al peso de las reglas cumplidas (públicas y ocultas).</li>
+              <li>Puntaje sobre {{ workspaceStore.currentExercise.maxScore }} puntos según tu código HTML y CSS.</li>
+            </ul>
+            <ul v-else class="list-disc pl-4 space-y-1 text-base-texto-secundario text-[11px]">
+              <li>Evaluación formal inmediata al entregar.</li>
+              <li>Consumo de intento al enviar solución definitiva.</li>
+              <li>Puntaje sobre {{ workspaceStore.currentExercise.maxScore }} puntos según tu respuesta.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 2. Pestaña Casos de Prueba (P02 — Solo coding) -->
+        <div v-else-if="leftTab === 'casos' && isCodingActivity" class="space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-base-borde-sutil">
+            <h3 class="font-bold text-xs text-base-texto-primario">Casos Públicos de Verificación</h3>
+            <span class="text-[11px] text-base-texto-secundario">
+              Evaluados con [▶ Probar código]
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <div
+              v-for="tc in workspaceStore.publicTestCases"
+              :key="tc.id"
+              class="border rounded-lg p-3 space-y-2 transition-colors"
+              :class="{
+                'border-semantico-pasa/40 bg-semantico-pasa/5': tc.passed === true,
+                'border-semantico-falla/40 bg-semantico-falla/5': tc.passed === false,
+                'border-base-borde-sutil bg-base-bg-secundario/40': tc.passed === undefined
+              }">
+              <div class="flex items-center justify-between font-bold text-xs">
+                <span>Caso #{{ tc.id }}: <code class="font-codigo text-acento-ambar-fuerte">{{ tc.input }}</code></span>
+                <span v-if="tc.passed === true" class="text-semantico-pasa flex items-center gap-1">
+                  <span>✔</span>
+                  <span>Superado</span>
+                </span>
+                <span v-else-if="tc.passed === false" class="text-semantico-falla flex items-center gap-1">
+                  <span>✖</span>
+                  <span>Falla en salida</span>
+                </span>
+                <span v-else class="text-base-texto-secundario text-[11px]">
+                  Sin evaluar
+                </span>
+              </div>
+
+              <!-- Diff Visual: Esperado vs Obtenido -->
+              <div class="grid grid-cols-2 gap-2 text-[11px] font-codigo pt-1">
+                <div class="p-2 bg-base-blanco rounded border border-base-borde-sutil">
+                  <span class="text-base-texto-secundario text-[10px] block font-sans">Salida Esperada:</span>
+                  <span class="font-bold text-semantico-pasa">{{ tc.expectedOutput }}</span>
+                </div>
+                <div class="p-2 bg-base-blanco rounded border border-base-borde-sutil">
+                  <span class="text-base-texto-secundario text-[10px] block font-sans">Salida de tu Código:</span>
+                  <span :class="tc.passed ? 'text-semantico-pasa font-bold' : tc.passed === false ? 'text-semantico-falla font-bold' : 'text-base-texto-secundario'">
+                    {{ tc.actualOutput || '—' }}
+                  </span>
+                  <span
+                    v-if="tc.passed === false && !tc.actualOutput"
+                    class="block mt-1 font-sans text-[10px] text-base-texto-secundario">
+                    Tu código no imprimió nada: revisa que escribas el resultado con console.log
+                    <template v-if="workspaceStore.timeLimitMs">y que no tarde más de {{ workspaceStore.timeLimitMs }} ms (un bucle infinito se corta).</template>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="workspaceStore.hiddenTestCaseCount > 0"
+            class="p-3 bg-base-bg-secundario rounded border border-base-borde-sutil text-[11px] text-base-texto-secundario flex items-center gap-2">
+            <Lock :size="14" aria-hidden="true" />
+            <span>{{ workspaceStore.hiddenTestCaseCount }} caso(s) privado(s) permanecen ocultos para evaluar la generalización de la solución.</span>
+          </div>
+        </div>
+
+        <!-- 3. Pestaña Consola / Registro de Ejecución -->
+        <div v-else class="space-y-2">
+          <div class="flex items-center justify-between pb-1 border-b border-base-borde-sutil">
+            <span class="font-bold text-xs">Historial de Calificación</span>
+            <button
+              @click="workspaceStore.consoleLog = ['Historial limpiado.']"
+              class="text-[11px] text-base-texto-secundario hover:text-base-texto-primario underline">
+              Limpiar
+            </button>
+          </div>
+
+          <div class="bg-editor-bg text-editor-text p-3 rounded-lg font-codigo text-xs space-y-1 min-h-[220px] max-h-[350px] overflow-y-auto">
+            <div v-for="(log, idx) in workspaceStore.consoleLog" :key="idx" class="leading-relaxed">
+              <span v-if="log.startsWith('✔')" class="text-[#5eead4]">{{ log }}</span>
+              <span v-else-if="log.startsWith('✖') || log.startsWith('⚠') || log.startsWith('⛔')" class="text-[#f87171]">{{ log }}</span>
+              <span v-else-if="log.startsWith('🎯')" class="text-[#fcd34d] font-bold">{{ log }}</span>
+              <span v-else class="text-[#7dd3fc]">{{ log }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Renderizado Reactivo según questionType -->
+
+    <!-- CASO A: Coding — CodeEditor (CodeMirror 6) -->
+    <div v-if="isCodingActivity" class="flex-1 flex flex-col md:h-full min-h-[70vh] md:min-h-0 bg-editor-bg text-editor-text overflow-hidden">
+      <!-- Barra Superior del Editor -->
+      <div class="h-9 bg-editor-header border-b border-editor-border px-4 flex items-center justify-between text-xs text-editor-muted flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <span class="text-stire-teal font-bold">JS</span>
+          <span class="text-white font-medium">solucion.js</span>
+          <span class="text-[10px] text-editor-muted">• JavaScript (ES2024)</span>
+        </div>
+
+        <div class="flex items-center gap-3 text-[11px]">
+          <span>Tabulaciones: 2 espacios</span>
+          <span>UTF-8</span>
+        </div>
+      </div>
+
+      <!-- Área de Edición de Código (CodeMirror 6) -->
+      <div class="flex-1 relative overflow-hidden">
+        <CodeEditor
+          v-model="workspaceStore.code"
+          language="javascript"
+          aria-label="Editor de código para tu solución"
+          placeholder="// Escribe tu solución aquí..."
+          class="w-full h-full"
+          @update:model-value="workspaceStore.triggerAutosave"
+        />
+      </div>
+
+      <!-- Barra de Estado Inferior del Editor -->
+      <div class="h-7 bg-[#007acc] text-white px-4 flex items-center justify-between text-[11px] flex-shrink-0 font-medium">
+        <div class="flex items-center gap-3">
+          <span>Tu código se ejecuta en un entorno seguro</span>
+          <span>•</span>
+          <span>{{ workspaceStore.lastAutosave }}</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span>Líneas: {{ lineCount }}</span>
+          <span>•</span>
+          <span>Caracteres: {{ workspaceStore.code.length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASO B: HTML / CSS por Reglas (Fase 25 - ocupa toda la altura) -->
+    <div v-else-if="isHtmlCssActivity" class="flex-1 flex flex-col md:h-full md:overflow-hidden">
+      <ExerciseHtmlCssExercise :question="workspaceStore.currentQuestion" />
+    </div>
+
+    <!-- CASO C: opción múltiple, completar código, clasificar, ordenar y emparejar — una sola columna centrada -->
+    <div v-else class="flex-1 md:h-full overflow-y-auto bg-base-bg-primario">
+      <div class="max-w-2xl mx-auto px-4 py-8 space-y-4">
+        <p v-if="typeInfo" class="text-[11px] font-semibold text-acento-ambar-fuerte flex items-center gap-1.5">
+          <DocenteExerciseTypeIcon :type="typeInfo.id" :size="14" /> {{ typeInfo.name }}
+        </p>
+
+        <section class="bg-base-blanco rounded-2xl border border-base-borde-sutil shadow-sm p-6 space-y-5">
+          <div
+            v-if="workspaceStore.currentExercise.description"
+            class="prose prose-sm max-w-none text-base-texto-primario"
+            v-html="statementHtml"></div>
+
+          <template v-if="workspaceStore.currentQuestion">
+            <ExerciseMcqExercise
+              v-if="workspaceStore.currentExercise.questionType === 'mcq'"
+              :question="workspaceStore.currentQuestion"
+              :show-statement="!workspaceStore.currentExercise.description" />
+            <ExerciseFillCodeExercise
+              v-else-if="workspaceStore.currentExercise.questionType === 'fill_code'"
+              :question="workspaceStore.currentQuestion"
+              :show-statement="!workspaceStore.currentExercise.description" />
+            <ExerciseDragDropExercise
+              v-else-if="workspaceStore.currentExercise.questionType === 'drag_drop'"
+              :question="workspaceStore.currentQuestion"
+              :show-statement="!workspaceStore.currentExercise.description" />
+            <ExerciseOrderingExercise
+              v-else-if="workspaceStore.currentExercise.questionType === 'ordering'"
+              :question="workspaceStore.currentQuestion"
+              :show-statement="!workspaceStore.currentExercise.description" />
+            <ExerciseMatchingExercise
+              v-else-if="workspaceStore.currentExercise.questionType === 'matching'"
+              :question="workspaceStore.currentQuestion"
+              :show-statement="!workspaceStore.currentExercise.description" />
+          </template>
+
+          <div v-else class="animate-pulse space-y-3 py-6" aria-label="Cargando el ejercicio">
+            <div class="h-4 bg-base-bg-secundario rounded w-3/4"></div>
+            <div class="h-20 bg-base-bg-secundario rounded"></div>
+          </div>
+        </section>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-[11px] text-base-texto-secundario">
+            <span v-if="typeInfo">{{ typeInfo.grading }} · </span>
+            <template v-if="remainingAttempts > 0">Te {{ remainingAttempts === 1 ? 'queda 1 intento' : `quedan ${remainingAttempts} intentos` }}.</template>
+            <template v-else>Ya usaste todos tus intentos.</template>
+          </p>
+          <button
+            type="button"
+            @click="workspaceStore.submitSolution()"
+            :disabled="!canSubmitAnswer"
+            class="px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte text-base-blanco text-sm font-bold hover:bg-acento-ambar inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte">
+            <Send :size="16" aria-hidden="true" />
+            {{ workspaceStore.isSubmitting ? 'Calificando…' : 'Entregar respuesta' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Resultado de Entrega (refleja el resultado real del backend) -->
+    <div
+      v-if="workspaceStore.submissionResult"
+      class="fixed inset-0 bg-base-texto-primario/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 max-w-md w-full shadow-2xl space-y-4 text-center">
+        <div
+          class="w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto font-bold"
+          :class="isSuccessResult ? 'bg-semantico-pasa/15 text-semantico-pasa' : 'bg-acento-ambar/15 text-acento-ambar-fuerte'">
+          <PartyPopper v-if="isSuccessResult" :size="28" aria-hidden="true" />
+          <ClipboardCheck v-else :size="28" aria-hidden="true" />
+        </div>
+
+        <h3 class="text-lg font-bold text-base-texto-primario">
+          {{ isSuccessResult ? '¡Bien hecho!' : 'Tu intento ya tiene nota' }}
+        </h3>
+
+        <div class="p-3 bg-base-bg-secundario rounded-lg border border-base-borde-sutil">
+          <p class="text-2xl font-bold" :class="isSuccessResult ? 'text-semantico-pasa' : 'text-semantico-falla'">
+            {{ workspaceStore.submissionResult?.totalScore ?? 0 }} / {{ resultMaxScore }} pts
+          </p>
+          <p v-if="isCodingActivity" class="text-xs text-base-texto-secundario mt-1">
+            <!-- passedCount/totalCount cuentan preguntas (respuestas correctas), no casos de prueba: una pregunta de código con
+                 2 casos (1 oculto) mostraba «1 de 1 casos». -->
+            Resolviste bien {{ workspaceStore.submissionResult?.passedCount ?? 0 }} de {{ workspaceStore.submissionResult?.totalCount ?? 0 }} {{ (workspaceStore.submissionResult?.totalCount ?? 0) === 1 ? 'ejercicio' : 'ejercicios' }} (cada uno se califica con todos sus casos de prueba, también los ocultos).
+          </p>
+          <p v-else-if="isHtmlCssActivity" class="text-xs text-base-texto-secundario mt-1">
+            Solución HTML y CSS evaluada contra las reglas del docente.
+          </p>
+          <p v-else class="text-xs text-base-texto-secundario mt-1">
+            Tu resultado ya cuenta en tu progreso.
+          </p>
+        </div>
+
+        <!-- Dominio de la unidad: la señal que de verdad importa para el
+             estudiante, más allá del puntaje crudo de un solo intento. -->
+        <div v-if="masteryDelta" class="p-3 bg-acento-ambar/10 rounded-lg border border-acento-ambar/30">
+          <p class="text-sm font-semibold text-base-texto-primario">
+            Tu dominio de esta unidad {{ masteryDelta.diff > 0 ? 'subió a' : 'se mantiene en' }}
+            <span class="text-acento-ambar-fuerte">{{ masteryDelta.after }}%</span>
+            <span v-if="masteryDelta.diff > 0" class="text-semantico-pasa"> (+{{ masteryDelta.diff }}%)</span>
+          </p>
+        </div>
+
+        <p v-if="workspaceStore.submissionResult?.feedback" class="text-xs text-base-texto-secundario">
+          {{ workspaceStore.submissionResult.feedback }}
+        </p>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button
+            @click="workspaceStore.submissionResult = null"
+            class="flex-1 py-2 rounded-md borde-afordancia text-xs font-semibold bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario transition-colors">
+            Seguir practicando
+          </button>
+
+          <NuxtLink
+            to="/estudiante"
+            class="flex-1 py-2 rounded-md bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco text-xs font-bold transition-colors">
+            Volver al Inicio
+          </NuxtLink>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { BookOpen, FlaskConical, Terminal, Lock, PartyPopper, ClipboardCheck, Send } from 'lucide-vue-next'
+import { useWorkspaceStore } from '~/stores/workspace'
+import { formatMarkdown } from '~/utils/formatMarkdown'
+import { exerciseTypeInfo } from '~/utils/exerciseTypes'
+
+definePageMeta({
+  layout: 'workspace'
+})
+
+const route = useRoute()
+const workspaceStore = useWorkspaceStore()
+const leftTab = ref<'enunciado' | 'casos' | 'consola'>('enunciado')
+
+// Al pulsar «Probar código» el resultado aparece en «Casos de Prueba»; antes el
+// store cambiaba SU pestaña y esta pantalla se quedaba en «Enunciado»: parecía
+// que no pasaba nada.
+watch(() => workspaceStore.isRunning, (running) => {
+  if (running && isCodingActivity.value) leftTab.value = 'casos'
+})
+
+const isCodingActivity = computed(() => workspaceStore.currentExercise.questionType === 'coding')
+const isHtmlCssActivity = computed(() => workspaceStore.currentExercise.questionType === 'html_css')
+
+const typeInfo = computed(() => exerciseTypeInfo(workspaceStore.currentExercise.questionType))
+const statementHtml = computed(() => formatMarkdown(workspaceStore.currentExercise.description || ''))
+const remainingAttempts = computed(() => Math.max(0, (workspaceStore.currentExercise.maxAttempts ?? 0) - (workspaceStore.currentExercise.usedAttempts ?? 0)))
+const canSubmitAnswer = computed(() => Boolean(workspaceStore.pendingAnswer) && !workspaceStore.isSubmitting && remainingAttempts.value > 0)
+
+const passedCount = computed(() => {
+  return workspaceStore.publicTestCases.filter(tc => tc.passed === true).length
+})
+
+const resultMaxScore = computed(() => {
+  return workspaceStore.submissionResult?.maxScore ?? workspaceStore.currentExercise.maxScore
+})
+
+const isSuccessResult = computed(() => {
+  const result = workspaceStore.submissionResult
+  if (!result) return false
+  if (isCodingActivity.value) {
+    return result.totalCount > 0 && result.passedCount === result.totalCount
+  }
+  // El backend ya normaliza el puntaje contra el total real de la actividad
+  // (activity.totalPoints) antes de comparar con el umbral de aprobación —
+  // ver submissions.service.ts. No se recalcula acá para no duplicar esa
+  // regla de negocio ni desalinearse si cambia en el backend.
+  return result.passed === true
+})
+
+// Cuánto subió el dominio (mastery %) de la unidad de aprendizaje tras este
+// intento, para comunicar el resultado en términos de progreso real y no
+// solo con un puntaje crudo de un único intento.
+const masteryDelta = computed(() => {
+  const before = workspaceStore.masteryBefore
+  const after = workspaceStore.masteryAfter
+  if (before === null || after === null) return null
+  return { before, after, diff: Math.max(0, after - before) }
+})
+
+// Fase 26: el mínimo de 18 servía para pintar el margen de números del textarea anterior; CodeMirror ya los dibuja,
+// así que la barra de estado muestra las líneas reales.
+const lineCount = computed(() => workspaceStore.code.split('\n').length)
+
+async function initActivity() {
+  const actId = Number(route.params.activityId)
+  if (actId) {
+    await workspaceStore.loadActivity(actId)
+    if (!isCodingActivity.value && leftTab.value === 'casos') {
+      leftTab.value = 'enunciado'
+    }
+  }
+}
+
+onMounted(() => {
+  initActivity()
+})
+
+watch(() => route.params.activityId, (newId) => {
+  if (newId) {
+    initActivity()
+  }
+})
+</script>

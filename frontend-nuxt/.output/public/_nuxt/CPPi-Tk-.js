@@ -1,0 +1,1 @@
+import{d as n,N as t,o as a,c as s,e as c,a as r,O as _}from"./DVATf6wR.js";const l=n({__name:"usuarios",setup(u){const e=t();return a(()=>{e.replace("/admin")}),(p,m)=>{const o=_;return r(),s("div",null,[c(o)])}}});export{l as default};

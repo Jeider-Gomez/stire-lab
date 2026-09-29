@@ -1,0 +1,7 @@
+{
+  "name": "STIRE-Soft",
+  "description": "Sistema Tutor Inteligente con Repetición Espaciada y Evaluación Automática",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

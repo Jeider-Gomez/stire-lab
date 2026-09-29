@@ -1,0 +1,1 @@
+import{o as d,A as r}from"./DVATf6wR.js";function s(o,t){function e(n){n.key!=="Escape"||n.defaultPrevented||o()&&t()}d(()=>document.addEventListener("keydown",e)),r(()=>document.removeEventListener("keydown",e))}export{s as u};
