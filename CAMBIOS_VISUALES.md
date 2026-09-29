@@ -4,25 +4,20 @@ Este proyecto funciona exclusivamente como un laboratorio visual y entorno de pr
 
 ## NO COPIAR — adaptaciones de AI Studio y Modo Demo
 
-Los siguientes archivos y directorios corresponden a adaptaciones técnicas exclusivas para el arranque en el entorno aislado de AI Studio y el funcionamiento en **MODO DEMO sin backend**:
+Los siguientes archivos existen solo para que el laboratorio funcione en **MODO DEMO sin backend**. Nunca se copian al proyecto real:
 
-- `frontend-nuxt/plugins/00.lab-demo.client.ts`: Plugin cliente que intercepta `$fetch` global para responder las peticiones del frontend desde la capa de simulación en memoria con retardo realista (200-400 ms).
-- `frontend-nuxt/lab/`: Directorio que contiene el router de simulación (`mock-api.ts`) y los datos en español (`datos/usuarios.ts`, `datos/cursos.ts`, `datos/estudiante.ts`, `datos/tutor.ts`, `datos/mensajes.ts`, `datos/sistema.ts`).
-- `scripts/start-applet.js`: Script de arranque adaptado para iniciar únicamente el servidor frontend Nuxt en modo demo en `0.0.0.0:3000` (el backend NestJS ya no se ejecuta).
-- `src/` (entidades y controladores NestJS): Adaptaciones previas de tipos TypeORM y rutas para compatibilidad inicial con SQLite.
-- `src/database-sqlite-patch.ts`: Parche de normalización de tipos de metadatos en TypeORM para SQLite.
-- `src/app.module.ts`: Configuración dinámica de TypeORM para soportar SQLite en local.
-- `src/data-source.ts`: Configuración del DataSource para conexión SQLite.
-- `src/main.ts`: Configuración de host `0.0.0.0`, puerto 3000 y entrega de archivos estáticos.
-- `src/common/http-security.ts`: Desactivación de frameguard y CSP en Helmet para permitir la visualización dentro del iframe de AI Studio.
-- `src/common/cors-options.ts`: Ajuste permisivo de orígenes CORS para el entorno de desarrollo y pruebas.
-- `src/common/filters/http-exception.filter.ts`: Fallback SPA para redirección de rutas cliente Nuxt en errores 404 no-API.
-- `src/app.controller.ts`: Endpoint raíz para servir el cliente Nuxt SPA.
-- `src/tutor/tutor.service.ts`: Respaldo opcional con clave de entorno `GEMINI_API_KEY` para el tutor inteligente.
-- `frontend-nuxt/nuxt.config.ts`: Configuración de Nuxt (modo SPA `ssr: false`, `apiBase` relativo y `demoMode: true`).
-- `package.json`: Scripts de arranque (`dev`, `build`) adaptados para AI Studio.
-- `.env` / `.env.example`: Variables de configuración y credenciales del entorno local de pruebas.
-- `metadata.json`: Metadatos de la aplicación requeridos por la plataforma AI Studio.
+- `frontend-nuxt/plugins/00.lab-demo.client.ts`: intercepta `$fetch` y responde desde la simulación en memoria (200-400 ms de retardo).
+- `frontend-nuxt/lab/`: enrutador de simulación (`mock-api.ts`) y datos de ejemplo (`datos/*.ts`).
+- `frontend-nuxt/nuxt.config.ts`: `apiBase` vacío, `demoMode` siempre activo y etiquetas `og:`.
+- `frontend-nuxt/pages/auth/login.vue`, **solo estas 4 partes** (el resto del archivo sí se puede copiar):
+  1. `const demoModeEnabled = computed(() => true)`
+  2. `esCorreoUnicor` también acepta `@example.com`
+  3. los nombres de las tarjetas demo (Camila Díaz, Prof. Laura Martínez, Admin Simulación)
+  4. `cuentasDemo` + `authStore.login(cuentasDemo[role], 'Test123')` en lugar de `switchRoleForDemo`
+- `frontend-nuxt/package-lock.json`: versiones resueltas en AI Studio.
+- `package.json` (raíz), `scripts/start-applet.js`, `metadata.json`, `.env.example`, `.gitignore`: arranque del laboratorio.
+
+El backend (`src/`, Docker, despliegue) se eliminó del laboratorio el 2026-09-29: ya no se usa.
 
 ## Registro de Cambios Visuales
 
