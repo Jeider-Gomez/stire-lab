@@ -1,5 +1,7 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#app'
+import { watch } from 'vue'
 import { handleMockApi } from '../lab/mock-api'
+import { useAuthStore } from '~/stores/auth'
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
@@ -51,4 +53,19 @@ export default defineNuxtPlugin(() => {
   mockFetch.create = () => mockFetch
 
   globalThis.$fetch = mockFetch
+
+  // La sesión también va en localStorage: dentro del iframe de AI Studio el navegador puede bloquear la cookie
+  // auth_token y cada recarga mandaría al login.
+  const CLAVE_SESION = 'stire-lab-sesion-v1'
+  const auth = useAuthStore()
+  try {
+    const guardado = localStorage.getItem(CLAVE_SESION)
+    if (!auth.token && guardado) auth.token = guardado
+  } catch { /* sin almacenamiento */ }
+  watch(() => auth.token, (t) => {
+    try {
+      if (t) localStorage.setItem(CLAVE_SESION, t)
+      else localStorage.removeItem(CLAVE_SESION) // al cerrar sesión lo creado se conserva: sirve para cambiar de rol
+    } catch { /* sin almacenamiento */ }
+  })
 })

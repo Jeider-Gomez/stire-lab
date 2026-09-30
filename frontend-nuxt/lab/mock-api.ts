@@ -29,7 +29,29 @@ const state = {
   submissions: {} as Record<string, any>,
 }
 
+// El estado se guarda en localStorage de este navegador: así una recarga (F5, o la vista previa de AI Studio al
+// refrescarse) no devuelve al usuario a «Camila» ni borra lo que creó. «Reiniciar demo»: resetLabDemo().
+const CLAVE_ESTADO = 'stire-lab-estado-v1'
+try {
+  const guardado = globalThis.localStorage?.getItem(CLAVE_ESTADO)
+  if (guardado) Object.assign(state, JSON.parse(guardado))
+} catch { /* sin almacenamiento (modo privado): el demo sigue en memoria */ }
+
+function guardarEstado() {
+  try { globalThis.localStorage?.setItem(CLAVE_ESTADO, JSON.stringify(state)) } catch { /* lleno o bloqueado */ }
+}
+
+export function resetLabDemo() {
+  try { globalThis.localStorage?.removeItem(CLAVE_ESTADO) } catch { /* nada */ }
+}
+
 export async function handleMockApi(method: string, fullPath: string, options: any = {}): Promise<any> {
+  const respuesta = await responder(method, fullPath, options)
+  if (method !== 'GET') guardarEstado()
+  return respuesta
+}
+
+async function responder(method: string, fullPath: string, options: any = {}): Promise<any> {
   const [pathname, queryString] = fullPath.split('?')
   const query = new URLSearchParams(queryString || '')
   const body = options?.body || {}
