@@ -5,6 +5,8 @@ export interface User {
   email: string
   fullName: string
   role: Role
+  /** Foto de perfil opcional (imagen en /media/<fotoId>); sin foto se muestran las iniciales. */
+  fotoId?: string | null
 }
 
 export type UnitStatus = 'dominado' | 'en-progreso' | 'por-iniciar' | 'bloqueado'
@@ -13,6 +15,11 @@ export interface LearningUnit {
   id: number
   moduleId: number
   moduleTitle: string
+  /** Tema al que pertenece (en pantalla se ve solo si el tema tiene más de una lección). */
+  topicId?: number
+  topicTitle?: string
+  /** true si el estudiante ya trabajó la lección (tiene progreso), aunque su dominio sea 0. */
+  empezada?: boolean
   title: string
   description: string
   order: number
@@ -32,11 +39,19 @@ export interface LearningUnit {
   }>
 }
 
+export interface CourseTopic {
+  id: number
+  title: string
+  units: LearningUnit[]
+}
+
 export interface CourseModule {
   id: number
   title: string
   order: number
+  /** Todas las lecciones del módulo, en orden (atajo de topics[].units). */
   units: LearningUnit[]
+  topics: CourseTopic[]
 }
 
 export type ReviewUrgency = 'al-dia' | 'manana' | 'vencido' | 'critico'
@@ -167,6 +182,8 @@ export interface TutorGuidance {
     learningUnitId: number
     title: string
   } | null
+  /** Título del refuerzo que incluye esta actividad: la ayuda del Tutor está ampliada. */
+  refuerzo?: string | null
 }
 
 export type TutorStyle = 'equilibrado' | 'motivador' | 'tecnico' | 'breve'

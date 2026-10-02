@@ -1,11 +1,9 @@
 <template>
   <div class="space-y-6">
     <!-- BARRA SUPERIOR: Contexto de Asignatura y Selector de Clases -->
-    <div
-      class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 anim-subir"
-      style="--stagger: 0">
+    <div class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <span class="text-lg">🏛️</span>
+        <Landmark :size="20" class="text-acento-ambar-fuerte shrink-0" aria-hidden="true" />
         <div>
           <span class="text-[10px] font-bold uppercase tracking-wider text-acento-ambar-fuerte">
             Asignatura Activa
@@ -22,57 +20,51 @@
       <div class="flex items-center gap-2 self-start sm:self-auto">
         <NuxtLink
           to="/estudiante/clases"
-          class="borde-afordancia px-3 py-1.5 rounded-md text-xs font-semibold text-base-texto-primario bg-base-blanco hover:bg-base-bg-secundario transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 shadow-sm">
-          <span>📚</span>
+          class="borde-afordancia px-3 py-1.5 rounded-md text-xs font-semibold text-base-texto-primario bg-base-blanco hover:bg-base-bg-secundario transition-colors flex items-center gap-1.5 shadow-sm">
+          <Library :size="14" aria-hidden="true" />
           <span>Mis Clases ({{ studentStore.enrolledClasses.length }})</span>
         </NuxtLink>
       </div>
     </div>
 
     <!-- Aviso discreto de solicitud de rol docente (§23 T4) -->
-    <Transition name="aviso-suave">
-      <div
-        v-if="myRoleRequest"
-        class="p-3 rounded-lg border text-xs flex items-center justify-between gap-3 shadow-sm anim-subir"
-        style="--stagger: 1"
-        :class="{
-          'bg-semantico-info/10 border-semantico-info/30 text-semantico-info': myRoleRequest.status === 'pending',
-          'bg-semantico-pasa/10 border-semantico-pasa/30 text-semantico-pasa': myRoleRequest.status === 'approved',
-          'bg-semantico-falla/10 border-semantico-falla/30 text-semantico-falla': myRoleRequest.status === 'rejected'
-        }">
-        <div class="flex items-center gap-2">
-          <span v-if="myRoleRequest.status === 'pending'">⏳</span>
-          <span v-else-if="myRoleRequest.status === 'approved'">🎉</span>
-          <span v-else>⚠️</span>
+    <div
+      v-if="myRoleRequest"
+      class="p-3 rounded-lg border text-xs flex items-center justify-between gap-3 shadow-sm"
+      :class="{
+        'bg-semantico-info/10 border-semantico-info/30 text-semantico-info': myRoleRequest.status === 'pending',
+        'bg-semantico-pasa/10 border-semantico-pasa/30 text-semantico-pasa': myRoleRequest.status === 'approved',
+        'bg-semantico-falla/10 border-semantico-falla/30 text-semantico-falla': myRoleRequest.status === 'rejected'
+      }">
+      <div class="flex items-center gap-2">
+        <Clock v-if="myRoleRequest.status === 'pending'" :size="14" aria-hidden="true" />
+        <PartyPopper v-else-if="myRoleRequest.status === 'approved'" :size="14" aria-hidden="true" />
+        <AlertTriangle v-else :size="14" aria-hidden="true" />
 
-          <span v-if="myRoleRequest.status === 'pending'" class="font-medium">
-            Tu solicitud para ser docente está pendiente
-          </span>
-          <span v-else-if="myRoleRequest.status === 'approved'" class="font-medium">
-            Aprobada: cierra sesión y vuelve a entrar para usar el rol docente
-          </span>
-          <span v-else class="font-medium">
-            Tu solicitud para ser docente fue rechazada<span v-if="myRoleRequest.reviewNote">: «{{ myRoleRequest.reviewNote }}»</span>
-          </span>
-        </div>
-
-        <button
-          v-if="myRoleRequest.status === 'approved'"
-          type="button"
-          @click="authStore.logout()"
-          class="text-xs underline font-bold hover:opacity-80 active:scale-95 transition-all">
-          Cerrar sesión
-        </button>
+        <span v-if="myRoleRequest.status === 'pending'" class="font-medium">
+          Tu solicitud para ser docente está pendiente
+        </span>
+        <span v-else-if="myRoleRequest.status === 'approved'" class="font-medium">
+          Aprobada: cierra sesión y vuelve a entrar para usar el rol docente
+        </span>
+        <span v-else class="font-medium">
+          Tu solicitud para ser docente fue rechazada<span v-if="myRoleRequest.reviewNote">: «{{ myRoleRequest.reviewNote }}»</span>
+        </span>
       </div>
-    </Transition>
+
+      <button
+        v-if="myRoleRequest.status === 'approved'"
+        type="button"
+        @click="authStore.logout()"
+        class="text-xs underline font-bold hover:opacity-80">
+        Cerrar sesión
+      </button>
+    </div>
 
     <!-- ESTADO VACÍO SI NO ESTÁ MATRICULADO -->
-    <section
-      v-if="!studentStore.isSyncing && studentStore.enrolledClasses.length === 0"
-      class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-8 text-center space-y-4 shadow-sm anim-subir"
-      style="--stagger: 1">
-      <div class="w-16 h-16 bg-acento-ambar/15 text-acento-ambar-fuerte rounded-full flex items-center justify-center text-3xl mx-auto">
-        🎓
+    <section v-if="!studentStore.isSyncing && studentStore.enrolledClasses.length === 0" class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-8 text-center space-y-4 shadow-sm anim-subir" style="--stagger: 1">
+      <div class="w-16 h-16 bg-acento-ambar/15 text-acento-ambar-fuerte rounded-full flex items-center justify-center mx-auto">
+        <GraduationCap :size="30" aria-hidden="true" />
       </div>
       <div class="max-w-md mx-auto space-y-1">
         <h2 class="text-base font-bold text-base-texto-primario">¡Bienvenido a STIRE!</h2>
@@ -82,222 +74,192 @@
       </div>
       <NuxtLink
         to="/estudiante/clases"
-        class="boton-tocar inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs shadow-sm">
-        <span>🔑</span>
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs transition-colors shadow-sm">
+        <KeyRound :size="14" aria-hidden="true" />
         <span>Ingresar Código de Clase</span>
       </NuxtLink>
     </section>
 
     <template v-else>
-      <!-- 1. TARJETA HERO DE ACCIÓN INMEDIATA (P01 — Orientación y Jerarquía) -->
-      <section
-        v-if="studentStore.activeUnit"
-        class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 anim-subir"
-        style="--stagger: 1">
-        <div class="space-y-2 max-w-2xl">
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-acento-ambar/15 text-acento-ambar-fuerte uppercase tracking-wider">
-              Recomendación del Tutor
-            </span>
-          </div>
+      <!-- Refuerzos y retos de su docente: lo primero, porque es lo que alguien preparó para él (§4.2) -->
+      <section v-for="r in refuerzos" :key="r.id" class="rounded-xl border p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 anim-subir tarjeta-hover" style="--stagger: 1"
+        :class="r.tipo === 'reto' ? 'bg-semantico-pasa/5 border-semantico-pasa/30' : 'bg-acento-ambar/10 border-acento-ambar-fuerte/30'">
+        <div class="space-y-1 min-w-0">
+          <p class="text-[10px] font-bold uppercase tracking-wider" :class="r.tipo === 'reto' ? 'text-semantico-pasa' : 'text-acento-ambar-fuerte'">
+            {{ r.tipo === 'reto' ? 'Un reto de tu docente' : 'Tu docente te preparó un refuerzo' }}
+          </p>
+          <h2 class="text-sm font-bold text-base-texto-primario">{{ r.titulo }}</h2>
+          <p v-if="r.mensaje" class="text-xs text-base-texto-secundario line-clamp-2">{{ r.mensaje }}</p>
+          <p class="text-[11px] text-base-texto-secundario">{{ r.pasosHechos }} de {{ r.totalPasos }} pasos<template v-if="r.fechaLimite"> · hasta {{ fechaCorta(r.fechaLimite) }}</template></p>
+        </div>
+        <NuxtLink :to="`/estudiante/refuerzos/${r.id}`" class="px-4 py-2 rounded-md bg-acento-ambar-fuerte text-base-blanco font-bold text-xs text-center shrink-0">
+          {{ r.pasosHechos ? 'Continuar' : 'Empezar' }}
+        </NuxtLink>
+      </section>
 
+      <!-- 1. EL SIGUIENTE PASO: una sola acción destacada (docs/DISENO_INTERVENCION_DOCENTE.md §10.2) -->
+      <section v-if="studentStore.activeUnit" class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 anim-subir tarjeta-hover" style="--stagger: 1">
+        <div class="space-y-2 max-w-2xl min-w-0">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-acento-ambar/15 text-acento-ambar-fuerte uppercase tracking-wider">
+            Tu siguiente paso
+          </span>
           <h1 class="text-lg md:text-xl font-bold text-base-texto-primario tracking-tight">
-            Continúa con: {{ studentStore.activeUnit.title }}
+            {{ studentStore.activeUnit.title }}
           </h1>
-          <!-- Motivo del recomendador (T2) -->
-          <p v-if="recommendedReasonMessage" class="text-xs text-base-texto-secundario leading-relaxed">
-            {{ recommendedReasonMessage }}
+          <p class="text-[11px] text-base-texto-secundario">{{ ubicacion(studentStore.activeUnit) }}</p>
+          <p class="text-xs text-base-texto-secundario leading-relaxed">
+            {{ studentStore.activeUnit.empezada ? (recommendedReasonMessage || studentStore.activeUnit.description) : studentStore.activeUnit.description }}
           </p>
-          <p v-else class="text-xs text-base-texto-secundario leading-relaxed">
-            {{ studentStore.activeUnit.description }}
-          </p>
-
-          <!-- Barra de Progreso de la Unidad: llenado animado desde 0 al aparecer usando transform: scaleX -->
-          <div class="flex items-center gap-3 pt-1">
-            <div class="w-48 h-2 bg-base-bg-secundario rounded-full overflow-hidden border border-base-borde-sutil">
-              <div
-                class="h-full w-full bg-acento-ambar-fuerte rounded-full origin-left transition-transform duration-500 ease-out"
-                :style="{ transform: `scaleX(${progressLoaded ? (studentStore.activeUnit.masteryPercentage / 100) : 0})` }"></div>
+          <div v-if="studentStore.activeUnit.empezada" class="flex items-center gap-3 pt-1">
+            <div class="w-48 h-2 bg-base-bg-secundario rounded-full overflow-hidden border border-base-borde-sutil" role="progressbar"
+              :aria-valuenow="studentStore.activeUnit.masteryPercentage" aria-valuemin="0" aria-valuemax="100" aria-label="Dominio de la lección">
+              <div class="h-full bg-acento-ambar-fuerte rounded-full transition-all duration-500" :style="{ width: `${studentStore.activeUnit.masteryPercentage}%` }"></div>
             </div>
-            <span class="text-xs font-semibold text-base-texto-primario">
-              {{ studentStore.activeUnit.masteryPercentage }}% de Dominio
-            </span>
+            <span class="text-xs font-semibold text-base-texto-primario">{{ studentStore.activeUnit.masteryPercentage }} % de dominio</span>
           </div>
         </div>
 
-        <!-- Botón de Gran Jerarquía Visual (P01) -->
         <div class="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto flex-shrink-0">
-          <div v-if="recommendedExerciseId" class="flex items-center gap-2 flex-wrap">
-            <!-- Icono motivo (T2) -->
-            <RotateCcw
-              v-if="recommendedReason === 'repaso'"
-              :size="14"
-              class="text-semantico-info shrink-0"
-              aria-label="Repaso"
-            />
-            <TrendingUp
-              v-else-if="recommendedReason === 'reto' || recommendedReason === 'sube_nivel'"
-              :size="14"
-              class="text-semantico-pasa shrink-0"
-              aria-label="Subir nivel"
-            />
-            <NuxtLink
-              :to="`/estudiante/evaluacion/${recommendedExerciseId}`"
-              class="boton-tocar px-5 py-3 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs text-center shadow-sm flex items-center justify-center gap-2"
-            >
-              <span>Continuar Ejercicio</span>
+          <!-- Una lección sin empezar abre la lección (la explicación primero); una empezada sigue con la práctica. -->
+          <!-- Con el tope (varios fallos seguidos) el siguiente paso es volver a la lección, no otro ejercicio. -->
+          <NuxtLink v-if="!studentStore.activeUnit.empezada || !recommendedExerciseId || recommendedReason === 'pausa'" :to="`/estudiante/unidad/${studentStore.activeUnit.id}`"
+            class="boton-tocar px-5 py-3 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs text-center shadow-sm flex items-center justify-center gap-2">
+            <BookOpen :size="15" aria-hidden="true" /> {{ recommendedReason === 'pausa' ? 'Repasar la explicación' : studentStore.activeUnit.empezada ? 'Abrir la lección' : 'Empezar la lección' }}
+          </NuxtLink>
+          <template v-else>
+            <NuxtLink :to="`/estudiante/evaluacion/${recommendedExerciseId}`"
+              class="boton-tocar px-5 py-3 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs text-center shadow-sm flex items-center justify-center gap-2">
+              <RotateCcw v-if="recommendedReason === 'repaso'" :size="15" aria-hidden="true" />
+              <TrendingUp v-else-if="recommendedReason === 'reto' || recommendedReason === 'sube_nivel'" :size="15" aria-hidden="true" />
+              <Play v-else :size="15" aria-hidden="true" />
+              Seguir practicando
             </NuxtLink>
-            <!-- Nivel (T2) -->
-            <span
-              v-if="recommendedLevel"
-              class="px-2 py-0.5 rounded text-[10px] font-bold bg-base-blanco border border-base-borde-fuerte text-base-texto-secundario capitalize"
-            >
-              {{ recommendedLevel === 'basico' ? 'Básico' : recommendedLevel === 'intermedio' ? 'Intermedio' : recommendedLevel === 'avanzado' ? 'Avanzado' : recommendedLevel }}
-            </span>
-          </div>
+            <NuxtLink :to="`/estudiante/unidad/${studentStore.activeUnit.id}`" class="text-xs font-semibold text-acento-ambar-fuerte hover:underline text-center">
+              Ver la explicación
+            </NuxtLink>
+          </template>
 
           <NuxtLink
             to="/estudiante/repasos"
-            class="borde-afordancia px-4 py-2.5 rounded-lg bg-base-bg-secundario text-center text-xs font-semibold text-base-texto-primario flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-[0.98] hover:shadow-xs">
-            <span>🧠</span>
-            <span>Repasar conceptos ({{ studentStore.reviews.length }})</span>
+            class="borde-afordancia px-4 py-2.5 rounded-lg bg-base-bg-secundario text-center text-xs font-semibold text-base-texto-primario flex items-center justify-center gap-1.5">
+            <Brain :size="14" aria-hidden="true" />
+            <span v-if="!studentStore.hasLoaded">Repasos</span>
+            <span v-else-if="studentStore.reviewsDueToday.length">Repasar ({{ studentStore.reviewsDueToday.length }} para hoy)</span>
+            <span v-else>Repasos: ninguno para hoy</span>
           </NuxtLink>
         </div>
       </section>
 
-      <!-- 2. MÉTRICAS RÁPIDAS DE ESTADO -->
-      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
-          style="--stagger: 2">
-          <p class="text-[11px] text-base-texto-secundario font-medium">Dominio</p>
-          <p class="text-xl font-bold mt-1" :class="studentStore.analytics.avgMastery >= 70 ? 'text-semantico-pasa' : studentStore.analytics.avgMastery >= 40 ? 'text-acento-ambar-fuerte' : 'text-base-texto-primario'">{{ studentStore.analytics.avgMastery }}%</p>
-          <!-- Antes decía «Supera umbral de 70%» siempre, también con 0 %. -->
-          <span class="text-[10px] text-base-texto-secundario">{{ studentStore.analytics.avgMastery >= 70 ? 'Ya dominas lo que llevas' : 'La meta es llegar al 70 %' }}</span>
+      <!-- 2. AVANCE HONESTO: cuánto del curso, no solo de lo trabajado (antes decía «Dominio 100 %» con 5 de 17) -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Tu avance">
+        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover anim-subir" style="--stagger: 2">
+          <p class="text-[11px] text-base-texto-secundario font-medium">Avance del curso</p>
+          <p class="text-xl font-bold mt-1 text-base-texto-primario">
+            <template v-if="studentStore.hasLoaded">{{ studentStore.avanceCurso.dominadas }} <span class="text-sm font-semibold text-base-texto-secundario">de {{ contar(studentStore.avanceCurso.total, 'leccion') }}</span></template>
+            <template v-else>—</template>
+          </p>
+          <div class="mt-2 h-1.5 bg-base-bg-secundario rounded-full overflow-hidden" aria-hidden="true">
+            <div class="h-full bg-semantico-pasa rounded-full" :style="{ width: `${porcentajeAvance}%` }"></div>
+          </div>
+          <span class="text-[10px] text-base-texto-secundario">lecciones dominadas</span>
         </div>
 
-        <div
-          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
-          style="--stagger: 3">
-          <p class="text-[11px] text-base-texto-secundario font-medium">Éxito en tus entregas</p>
-          <p class="text-xl font-bold text-base-texto-primario mt-1">{{ studentStore.analytics.avgSuccessRate }}%</p>
-          <span class="text-[10px] text-base-texto-secundario">De tus entregas</span>
-        </div>
-
-        <div
-          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
-          style="--stagger: 4">
-          <p class="text-[11px] text-base-texto-secundario font-medium">Racha de Aprendizaje</p>
-          <p class="text-xl font-bold text-acento-ambar-fuerte mt-1">🔥 {{ plural(studentStore.analytics.streakDays, 'día', 'días') }}</p>
-          <span class="text-[10px] text-base-texto-secundario">Constancia formativa</span>
-        </div>
-
-        <div
-          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
-          style="--stagger: 5">
-          <p class="text-[11px] text-base-texto-secundario font-medium">Ejercicios Completados</p>
-          <p class="text-xl font-bold text-semantico-info mt-1">{{ studentStore.analytics.completedExercises }}</p>
-          <span class="text-[10px] text-base-texto-secundario">En el período activo</span>
-        </div>
-      </section>
-
-      <!-- 3. PLAN CURRICULAR POR MÓDULOS -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between anim-subir" style="--stagger: 6">
-          <h2 class="text-base font-bold text-base-texto-primario flex items-center gap-2">
-            <span>🗺️</span> Plan Curricular de la Asignatura
-          </h2>
-          <span class="text-xs text-base-texto-secundario">
-            {{ studentStore.modules.length }} Módulos disponibles
+        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover anim-subir" style="--stagger: 3">
+          <p class="text-[11px] text-base-texto-secundario font-medium">Dominio en lo que has trabajado</p>
+          <p class="text-xl font-bold mt-1" :class="studentStore.avanceCurso.dominioTrabajado >= DOMINADO ? 'text-semantico-pasa' : 'text-base-texto-primario'">
+            {{ studentStore.hasLoaded && studentStore.avanceCurso.trabajadas ? `${studentStore.avanceCurso.dominioTrabajado} %` : '—' }}
+          </p>
+          <span class="text-[10px] text-base-texto-secundario">
+            {{ studentStore.avanceCurso.trabajadas ? `en ${contar(studentStore.avanceCurso.trabajadas, 'leccion')} que ya empezaste` : 'Aún no empiezas ninguna lección' }}
           </span>
         </div>
 
-        <div v-if="studentStore.modules.length === 0" class="p-8 text-center bg-base-blanco rounded-xl border border-base-borde-sutil text-xs text-base-texto-secundario anim-subir" style="--stagger: 7">
-          No hay módulos publicados para esta asignatura en este momento.
+        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover anim-subir" style="--stagger: 4">
+          <p class="text-[11px] text-base-texto-secundario font-medium">Racha de estudio</p>
+          <p class="text-xl font-bold text-acento-ambar-fuerte mt-1 flex items-center gap-1.5"><Flame :size="18" aria-hidden="true" /> {{ studentStore.hasLoaded ? plural(studentStore.analytics.streakDays, 'día', 'días') : '—' }}</p>
+          <NuxtLink to="/estudiante/progreso" class="text-[10px] font-semibold text-acento-ambar-fuerte hover:underline">Ver mis estadísticas</NuxtLink>
+        </div>
+      </section>
+
+      <!-- Entregas que creó el docente: primero lo que falta entregar (docs/DISENO_INTERVENCION_DOCENTE.md §3.2) -->
+      <section v-if="entregas.length" class="bg-base-blanco rounded-xl border border-base-borde-sutil shadow-sm anim-subir" style="--stagger: 5" aria-labelledby="entregas-titulo">
+        <h2 id="entregas-titulo" class="px-5 py-3 border-b border-base-borde-sutil text-sm font-bold text-base-texto-primario flex items-center gap-2">
+          <Inbox :size="16" class="text-acento-ambar-fuerte" aria-hidden="true" /> Entregas
+        </h2>
+        <ul class="divide-y divide-base-borde-sutil">
+          <li v-for="e in entregas" :key="e.id">
+            <NuxtLink :to="`/estudiante/entregas/${e.id}`" class="px-5 py-3 flex flex-wrap items-center justify-between gap-2 text-xs hover:bg-base-bg-primario/60 group">
+              <span class="min-w-0">
+                <span class="block font-semibold text-base-texto-primario group-hover:underline">{{ e.titulo }}</span>
+                <span class="block text-[11px] text-base-texto-secundario">
+                  {{ e.versionesUsadas }} de {{ e.limite }} {{ e.limite === 1 ? 'versión' : 'versiones' }}<template v-if="e.cierraAt"> · cierra {{ fechaCorta(e.cierraAt) }}</template>
+                </span>
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold shrink-0"
+                :class="e.estado === 'sin_entregar' ? 'bg-acento-ambar/15 text-acento-ambar-fuerte' : e.estado === 'revisada' ? 'bg-semantico-pasa/15 text-semantico-pasa' : 'bg-base-bg-secundario text-base-texto-secundario'">
+                {{ e.estado === 'revisada' ? (e.ultima?.nota != null ? `Revisada · ${notaTexto(e.ultima.nota)}` : 'Revisada') : e.estado === 'por_revisar' ? 'Entregada, sin revisar' : 'Por entregar' }}
+              </span>
+            </NuxtLink>
+          </li>
+        </ul>
+      </section>
+
+      <!-- 3. EL PLAN DEL CURSO: módulos, temas (solo si agrupan más de una lección) y lecciones -->
+      <section class="space-y-4 anim-subir" style="--stagger: 6" aria-labelledby="plan-titulo">
+        <div class="flex items-center justify-between">
+          <h2 id="plan-titulo" class="text-base font-bold text-base-texto-primario flex items-center gap-2">
+            <MapIcon :size="18" class="text-acento-ambar-fuerte" aria-hidden="true" /> Plan del curso
+          </h2>
+          <span class="text-xs text-base-texto-secundario">{{ contar(studentStore.modules.length, 'modulo') }}</span>
+        </div>
+
+        <div v-if="studentStore.modules.length === 0" class="p-8 text-center bg-base-blanco rounded-xl border border-base-borde-sutil text-xs text-base-texto-secundario">
+          Tu docente todavía no ha publicado el contenido de este curso.
         </div>
 
         <div v-else class="space-y-4">
-          <div
-            v-for="(mod, modIdx) in studentStore.modules"
-            :key="mod.id"
-            class="bg-base-blanco rounded-xl border border-base-borde-sutil overflow-hidden shadow-sm anim-subir hover:shadow-md transition-shadow duration-200"
-            :style="{ '--stagger': 7 + modIdx }">
-            <!-- Cabecera del Módulo -->
-            <div class="bg-base-bg-secundario/60 px-5 py-3 border-b border-base-borde-sutil flex items-center justify-between">
-              <h3 class="font-bold text-xs text-base-texto-primario">
-                {{ mod.title }}
-              </h3>
-              <span class="text-[11px] text-base-texto-secundario">
-                {{ mod.units.length }} {{ mod.units.length === 1 ? 'Unidad' : 'Unidades' }}
+          <section v-for="(mod, modIdx) in studentStore.modules" :key="mod.id" class="bg-base-blanco rounded-xl border border-base-borde-sutil overflow-hidden shadow-sm anim-subir tarjeta-hover" :style="{ '--stagger': 7 + modIdx }" :aria-label="mod.title">
+            <div class="bg-base-bg-secundario/60 px-5 py-3 border-b border-base-borde-sutil flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-bold text-xs text-base-texto-primario">{{ mod.title }}</h3>
+              <span class="text-[11px] text-base-texto-secundario flex items-center gap-2">
+                <span class="w-16 h-1.5 bg-base-blanco rounded-full overflow-hidden border border-base-borde-sutil" aria-hidden="true">
+                  <span class="block h-full bg-semantico-pasa" :style="{ width: `${porcentajeModulo(mod)}%` }"></span>
+                </span>
+                {{ dominadasDe(mod) }} de {{ contar(mod.units.length, 'leccion') }} dominadas
               </span>
             </div>
 
-            <!-- Lista de Unidades del Módulo -->
-            <div class="divide-y divide-base-borde-sutil">
-              <div
-                v-for="unit in mod.units"
-                :key="unit.id"
-                class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-base-bg-primario/60 transition-colors duration-150">
-                <div class="space-y-2 flex-1">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span
-                      class="px-2 py-0.5 rounded text-[10px] font-bold"
-                      :class="getStatusBadgeClass(unit.status)">
-                      {{ getStatusLabel(unit.status) }}
+            <!-- Cada tema es un grupo separado por una línea; el nombre solo aparece si agrupa más de una lección. -->
+            <div>
+            <div v-for="tema in mod.topics" :key="tema.id" class="border-t border-base-borde-sutil first:border-t-0 py-1">
+              <p v-if="tema.units.length > 1" class="px-5 pt-2 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-base-texto-secundario">
+                {{ tema.title }}
+              </p>
+              <ul>
+                <li v-for="unit in tema.units" :key="unit.id">
+                  <NuxtLink :to="`/estudiante/unidad/${unit.id}`"
+                    class="px-5 py-2.5 flex items-center gap-3 hover:bg-base-bg-primario/60 transition-colors group"
+                    :class="unit.id === studentStore.activeUnit?.id ? 'bg-acento-ambar/5' : ''"
+                    :aria-label="`${unit.title}: ${estadoLeccion(unit)}`">
+                    <CheckCircle2 v-if="unit.status === 'dominado'" :size="18" class="text-semantico-pasa shrink-0" aria-hidden="true" />
+                    <CircleDot v-else-if="unit.status === 'en-progreso'" :size="18" class="text-acento-ambar-fuerte shrink-0" aria-hidden="true" />
+                    <Circle v-else :size="18" class="text-base-borde-fuerte shrink-0" aria-hidden="true" />
+                    <span class="flex-1 min-w-0">
+                      <span class="block text-xs font-semibold group-hover:underline" :class="unit.status === 'dominado' ? 'text-base-texto-secundario' : 'text-base-texto-primario'">{{ unit.title }}</span>
+                      <span v-if="unit.id === studentStore.activeUnit?.id" class="block text-[11px] text-base-texto-secundario truncate">{{ unit.description }}</span>
                     </span>
-                    <h4 class="text-xs font-bold text-base-texto-primario">
-                      {{ unit.title }}
-                    </h4>
-                    <span class="text-[11px] font-semibold text-acento-ambar-fuerte">
-                      ({{ unit.masteryPercentage }}% dominio)
+                    <span v-if="forgettingUnitIds.has(unit.id)" class="inline-flex items-center gap-1 text-[10px] font-semibold text-semantico-info shrink-0">
+                      <RotateCcw :size="12" aria-hidden="true" /> Repasar
                     </span>
-                    <!-- Badge «Se está olvidando» (T2) -->
-                    <span
-                      v-if="forgettingUnitIds.has(unit.id)"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-estado-unidad-bloqueado/15 text-estado-unidad-bloqueado"
-                    >
-                      <AlertTriangle :size="10" />
-                      Se está olvidando
-                    </span>
-                  </div>
-
-                  <p class="text-xs text-base-texto-secundario">
-                    {{ unit.description }}
-                  </p>
-
-                  <!-- Desglose de actividades con pesos -->
-                  <div v-if="unit.activities && unit.activities.length > 0" class="flex items-center gap-1.5 flex-wrap pt-1">
-                    <span class="text-[10px] text-base-texto-secundario font-medium mr-1">Actividades ponderadas:</span>
-                    <NuxtLink
-                      v-for="act in unit.activities"
-                      :key="act.id"
-                      :to="`/estudiante/evaluacion/${act.id}`"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-base-borde-fuerte bg-base-blanco hover:bg-acento-ambar/10 hover:border-acento-ambar-fuerte active:scale-[0.97] transition-all duration-150">
-                      <span>{{ getActivityIcon(act.title) }}</span>
-                      <span class="font-semibold">{{ act.title }}</span>
-                      <span class="text-acento-ambar-fuerte font-bold">({{ Math.round((act.adaptiveWeight || 1) * 100) }}%)</span>
-                    </NuxtLink>
-                  </div>
-                </div>
-
-                <!-- Acciones de Unidad -->
-                <div class="flex items-center gap-2 flex-shrink-0 self-end md:self-center">
-                  <NuxtLink
-                    v-if="unit.exerciseActivityId"
-                    :to="`/estudiante/evaluacion/${unit.exerciseActivityId}`"
-                    class="boton-tocar px-3.5 py-1.5 rounded-md text-xs font-semibold bg-acento-ambar-fuerte text-base-blanco hover:bg-acento-ambar shadow-sm flex items-center gap-1">
-                    <span>▶</span>
-                    <span>Practicar</span>
+                    <span v-if="unit.id === studentStore.activeUnit?.id"
+                      class="px-3 py-1 rounded-md text-[11px] font-bold bg-acento-ambar-fuerte text-base-blanco shrink-0">Continuar</span>
+                    <span v-else-if="unit.empezada" class="text-[11px] font-semibold text-base-texto-secundario shrink-0 w-10 text-right">{{ unit.masteryPercentage }} %</span>
                   </NuxtLink>
-
-                  <span v-else class="text-xs text-base-texto-secundario px-2 py-1 flex items-center gap-1">
-                    <span>🔒</span>
-                    <span>Próximamente</span>
-                  </span>
-                </div>
-              </div>
+                </li>
+              </ul>
             </div>
-          </div>
+            </div>
+          </section>
         </div>
       </section>
     </template>
@@ -306,11 +268,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RotateCcw, TrendingUp, AlertTriangle } from 'lucide-vue-next'
+import { RotateCcw, TrendingUp, AlertTriangle, Landmark, Library, Clock, PartyPopper, GraduationCap, KeyRound, Brain, Flame, Map as MapIcon, Play, BookOpen, CheckCircle2, CircleDot, Circle, Inbox } from 'lucide-vue-next'
+import { contar, DOMINADO } from '~/utils/terminos'
+import { fechaCorta, notaTexto, type EstadoEntrega } from '~/utils/entregas'
 import { useStudentStore } from '~/stores/student'
 import { useAuthStore } from '~/stores/auth'
 import { useApi } from '~/composables/useApi'
-import type { UnitStatus } from '~/types'
+import type { CourseModule, LearningUnit } from '~/types'
 
 definePageMeta({
   layout: 'student'
@@ -339,17 +303,9 @@ async function fetchMyRoleRequest() {
   }
 }
 
-// Estado de animación de la barra de dominio
-const progressLoaded = ref(false)
-
 onMounted(() => {
   studentStore.fetchStudentData()
   fetchMyRoleRequest()
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      progressLoaded.value = true
-    }, 60)
-  })
 })
 
 // Ejercicio a recomendar en la tarjeta hero: usa el mismo motor de dominio
@@ -400,29 +356,54 @@ const forgettingUnitIds = computed(() => {
   return ids
 })
 
-function getStatusBadgeClass(status: UnitStatus) {
-  switch (status) {
-    case 'dominado': return 'bg-estado-unidad-dominado/15 text-estado-unidad-dominado'
-    case 'en-progreso': return 'bg-estado-unidad-en-progreso/15 text-estado-unidad-en-progreso'
-    case 'por-iniciar': return 'bg-estado-unidad-por-iniciar/15 text-estado-unidad-por-iniciar'
-    case 'bloqueado': return 'bg-estado-unidad-bloqueado/15 text-estado-unidad-bloqueado'
+// Refuerzos y retos sin terminar de la clase activa.
+interface MiRefuerzo { id: number; classId: number; tipo: 'refuerzo' | 'reto'; titulo: string; mensaje: string | null; fechaLimite: string | null; totalPasos: number; pasosHechos: number }
+const refuerzosTodos = ref<MiRefuerzo[]>([])
+const refuerzos = computed(() => refuerzosTodos.value.filter((r) => r.classId === studentStore.currentClassId && r.pasosHechos < r.totalPasos))
+onMounted(async () => {
+  try {
+    refuerzosTodos.value = await api.get<MiRefuerzo[]>('/refuerzos/mios')
+  } catch {
+    // Sin refuerzos o servidor sin esta función todavía: no se muestra nada.
   }
+})
+
+// Entregas de la clase activa: primero las que faltan por entregar, luego las que tienen revisión nueva.
+interface MiEntrega { id: number; titulo: string; cierraAt: string | null; estado: EstadoEntrega; versionesUsadas: number; limite: number; ultima: { nota: number | null } | null }
+const entregas = ref<MiEntrega[]>([])
+const ORDEN_ESTADO: Record<EstadoEntrega, number> = { sin_entregar: 0, revisada: 1, por_revisar: 2 }
+watch(
+  () => studentStore.currentClassId,
+  async (classId) => {
+    entregas.value = []
+    if (!classId) return
+    try {
+      const lista = await api.get<MiEntrega[]>(`/entregas/mias?classId=${classId}`)
+      entregas.value = [...lista].sort((a, b) => ORDEN_ESTADO[a.estado] - ORDEN_ESTADO[b.estado])
+    } catch {
+      // Sin entregas o servidor sin esta función todavía: la sección no aparece.
+    }
+  },
+  { immediate: true },
+)
+
+const porcentajeAvance = computed(() => {
+  const { dominadas, total } = studentStore.avanceCurso
+  return total ? Math.round((dominadas / total) * 100) : 0
+})
+const dominadasDe = (mod: CourseModule) => mod.units.filter((u) => u.status === 'dominado').length
+const porcentajeModulo = (mod: CourseModule) => (mod.units.length ? Math.round((dominadasDe(mod) / mod.units.length) * 100) : 0)
+
+/** «Módulo · Tema»; el tema solo aparece si agrupa más de una lección (si tiene una, no aporta). */
+function ubicacion(unit: LearningUnit) {
+  const mod = studentStore.modules.find((m) => m.id === unit.moduleId)
+  const tema = mod?.topics.find((t) => t.id === unit.topicId)
+  return tema && tema.units.length > 1 ? `${unit.moduleTitle} · ${tema.title}` : unit.moduleTitle
 }
 
-function getStatusLabel(status: UnitStatus) {
-  switch (status) {
-    case 'dominado': return 'Dominado ✔'
-    case 'en-progreso': return 'En Progreso ⏳'
-    case 'por-iniciar': return 'Por Iniciar'
-    case 'bloqueado': return 'Bloqueado 🔒'
-  }
-}
-
-function getActivityIcon(title: string): string {
-  const t = title.toLowerCase()
-  if (t.includes('quiz') || t.includes('mcq')) return '📝'
-  if (t.includes('completar') || t.includes('fill')) return '🧩'
-  if (t.includes('código') || t.includes('desafío') || t.includes('coding')) return '💻'
-  return '⚡'
+function estadoLeccion(unit: LearningUnit) {
+  if (unit.status === 'dominado') return `dominada, ${unit.masteryPercentage} %`
+  if (unit.empezada) return `en práctica, ${unit.masteryPercentage} %`
+  return 'sin empezar'
 }
 </script>

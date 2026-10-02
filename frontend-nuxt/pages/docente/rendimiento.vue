@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-6xl mx-auto space-y-6">
+    <DocentePestanasClase v-if="selectedClassId" :class-id="selectedClassId" activa="estudiantes" :nombre="selectedClass?.name" :codigo="selectedClass?.code" />
     <!-- Cabecera DOC-V04 -->
     <header class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -20,13 +21,13 @@
       </div>
 
       <!-- Selector de Clase -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 min-w-0">
         <label for="rendimiento-class-selector" class="text-xs font-semibold text-base-texto-secundario whitespace-nowrap">Clase:</label>
         <select
           id="rendimiento-class-selector"
           v-model="selectedClassId"
           @change="loadClassMetrics"
-          class="text-xs bg-base-blanco text-base-texto-primario border border-base-borde-fuerte rounded-md px-3 py-1.5 outline-none focus:border-acento-ambar-fuerte focus:ring-2 focus:ring-acento-ambar-fuerte/30">
+          class="min-w-0 max-w-full w-full sm:w-auto text-xs bg-base-blanco text-base-texto-primario border border-base-borde-fuerte rounded-md px-3 py-1.5 outline-none focus:border-acento-ambar-fuerte focus:ring-2 focus:ring-acento-ambar-fuerte/30">
           <option v-for="c in teacherClasses" :key="c.id" :value="c.id">
             {{ c.name }} ({{ c.code }})
           </option>
@@ -77,7 +78,7 @@
           </span>
           <div class="flex items-baseline gap-2">
             <span class="text-2xl font-bold font-mono" :class="metrics.metrics.avgClassMastery >= 60 ? 'text-semantico-pasa' : 'text-semantico-falla'">
-              {{ metrics.metrics.avgClassMastery }}%
+              {{ porcentaje(metrics.metrics.avgClassMastery) }}
             </span>
             <span class="text-[11px] text-base-texto-secundario">del curso</span>
           </div>
@@ -96,7 +97,7 @@
           </span>
           <div class="flex items-baseline gap-2">
             <span class="text-2xl font-bold font-mono text-base-texto-primario">
-              {{ metrics.metrics.avgClassSuccessRate }}%
+              {{ porcentaje(metrics.metrics.avgClassSuccessRate) }}
             </span>
             <span class="text-[11px] text-base-texto-secundario">en envíos</span>
           </div>
@@ -137,6 +138,9 @@
           </p>
         </div>
       </section>
+
+      <!-- Mapa de calor (paso 6): a quién ayudar ahora -->
+      <DocenteMapaDeCalor :class-id="selectedClassId" />
 
       <!-- Roster de Estudiantes con Filtros -->
       <section class="bg-base-blanco rounded-xl border border-base-borde-sutil shadow-sm overflow-hidden space-y-4 p-5">
@@ -189,10 +193,10 @@
                   {{ st.email }}
                 </td>
                 <td class="p-3 text-center font-mono font-bold" :class="st.avgMastery >= 60 ? 'text-semantico-pasa' : 'text-semantico-falla'">
-                  {{ st.avgMastery }}%
+                  {{ porcentaje(st.avgMastery) }}
                 </td>
                 <td class="p-3 text-center font-mono text-base-texto-primario">
-                  {{ st.successRate }}%
+                  {{ porcentaje(st.successRate) }}
                 </td>
                 <td class="p-3 text-center font-mono text-base-texto-secundario">
                   {{ st.submissionsCount }}
@@ -210,7 +214,7 @@
                 </td>
                 <td class="p-3 text-right">
                   <NuxtLink
-                    :to="`/docente/estudiante/${st.studentId}`"
+                    :to="`/docente/estudiante/${st.studentId}?clase=${selectedClassId}`"
                     class="borde-afordancia px-2.5 py-1 rounded text-[11px] font-semibold text-acento-ambar-fuerte hover:bg-acento-ambar/10 inline-flex items-center gap-1">
                     <span>Ver detalle</span>
                     <span>→</span>
@@ -226,6 +230,7 @@
 </template>
 
 <script setup lang="ts">
+import { porcentaje } from '~/utils/porcentaje'
 import { useApi } from '~/composables/useApi'
 const { messageOf } = useApiErrorMessage()
 

@@ -244,7 +244,7 @@
           type="submit"
           :disabled="isLoading"
           class="boton-acceso relative w-full mt-2 py-3 px-4 rounded-xl font-bold text-sm font-poppins text-[#070e24] bg-stire-teal hover:bg-[#14e2c8] focus:outline-none focus-visible:ring-4 focus-visible:ring-stire-teal/40 shadow-lg shadow-stire-teal/20 transition-all flex items-center justify-center gap-2 overflow-hidden disabled:cursor-wait">
-          <span class="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent brillo-barrido pointer-events-none" aria-hidden="true" />
+          <span class="brillo-barrido" aria-hidden="true" />
           <template v-if="isLoading">
             <span class="w-4 h-4 rounded-full border-2 border-[#070e24] border-t-transparent animate-spin" aria-hidden="true" />
             <span>Registrando cuenta…</span>
@@ -257,7 +257,7 @@
 
       <p class="mt-5 pt-4 border-t border-slate-200 text-center text-xs text-slate-600">
         ¿Ya tienes una cuenta registrada?
-        <NuxtLink to="/auth/login" class="font-semibold text-stire-blue hover:text-stire-purple hover:underline transition-colors">
+        <NuxtLink :to="{ path: '/auth/login', query: route.query }" class="font-semibold text-stire-blue hover:text-stire-purple hover:underline transition-colors">
           Inicia sesión aquí
         </NuxtLink>
       </p>
@@ -269,6 +269,9 @@
 import { AlertCircle, AlertTriangle, ArrowRight, BookOpen, Bot, Check, CheckCircle2, ClipboardCheck, Eye, EyeOff, GraduationCap, Info, KeyRound, Lock, Mail, ShieldCheck, User } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useApi } from '~/composables/useApi'
+import { rutaDeVuelta } from '~/utils/codigoClase'
+
+const route = useRoute()
 
 definePageMeta({
   layout: 'auth'
@@ -352,7 +355,7 @@ async function handleRegister() {
       await new Promise((r) => setTimeout(r, 2500))
     }
 
-    navigateTo('/estudiante')
+    navigateTo(rutaDeVuelta(route.query.volver) ?? '/estudiante')
   } else {
     errorMessage.value = result.error || 'Error al procesar el registro.'
   }

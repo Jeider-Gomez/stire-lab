@@ -1,8 +1,8 @@
+import { contextoSegunPantalla } from '~/utils/contextoTutor'
 import { defineStore } from 'pinia'
 import type { TutorMessage, TutorSuggestedActivity, TutorApiKey, TutorGuidance } from '~/types'
 import { useAuthStore } from './auth'
 import { useWorkspaceStore } from './workspace'
-import { useStudentStore } from './student'
 import { useApi } from '~/composables/useApi'
 import { useApiErrorMessage } from '~/composables/useApiErrorMessage'
 
@@ -15,7 +15,6 @@ export const useTutorStore = defineStore('tutor', () => {
   const { friendlyTutorError } = useApiErrorMessage()
   const authStore = useAuthStore()
   const workspaceStore = useWorkspaceStore()
-  const studentStore = useStudentStore()
   const route = useRoute()
 
   // ─── Estado del drawer ──────────────────────────────────────────────────────
@@ -36,9 +35,19 @@ export const useTutorStore = defineStore('tutor', () => {
   // ─── Nivel de guía y orientación (§18.4, §21.2) ───────────────────────────
   /** null = no hay actividad activa (chips ocultos) */
   const guidanceLevel = ref<1 | 2 | 3 | null>(null)
+  /**
+   * El proyecto propio abierto (docs/DISENO_PROYECTOS.md, fase 3): la página del proyecto lo pone y lo quita. Con él, el
+   * Tutor guía en el proyecto en vez de en un ejercicio.
+   */
+  const proyectoAbierto = ref<{ titulo: string; tipo: 'web' | 'javascript' | 'pseudocodigo' | 'diagrama'; archivos: Array<{ nombre: string; contenido: string }> } | null>(null)
+  function setProyectoAbierto(p: typeof proyectoAbierto.value) {
+    proyectoAbierto.value = p
+  }
   const tutorEnabled = ref(true)
   const dueReviews = ref<TutorGuidance['dueReviews']>(null)
   const contentLink = ref<TutorGuidance['contentLink']>(null)
+  /** Refuerzo que incluye la actividad actual (ayuda ampliada); null si no hay. */
+  const refuerzo = ref<string | null>(null)
 
   // ─── Clave de Google AI Studio (§19) ────────────────────────────────────────
   const hasLoadedHistory = ref(false)
@@ -153,12 +162,14 @@ export const useTutorStore = defineStore('tutor', () => {
       tutorEnabled.value = res?.tutorEnabled ?? true
       dueReviews.value = res?.dueReviews ?? null
       contentLink.value = res?.contentLink ?? null
+      refuerzo.value = res?.refuerzo ?? null
     } catch {
       // Si la llamada falla, dueReviews y contentLink quedan null y el chat sigue funcionando
       guidanceLevel.value = null
       tutorEnabled.value = true
       dueReviews.value = null
       contentLink.value = null
+      refuerzo.value = null
     }
   }
 
@@ -243,20 +254,18 @@ export const useTutorStore = defineStore('tutor', () => {
         guidanceLevel?: 1 | 2 | 3 | null
       }>('/tutor/chat', {
         message: userText,
-        context: {
-          currentRoute: route.path,
-          unitTitle: workspaceStore.currentExercise?.unitTitle || studentStore.activeUnit?.title,
-          learningUnitId: studentStore.activeUnit?.id,
-          activityTitle: workspaceStore.currentExercise?.title,
-          activityId: workspaceStore.currentExercise?.activityId,
-          // En un ejercicio de HTML y CSS el código está en htmlCode/cssCode (`code` es el búfer del ejercicio de JavaScript).
-          ...(workspaceStore.currentExercise?.questionType === 'html_css'
-            ? {
-                currentCode: ['<!-- index.html -->', workspaceStore.htmlCode, '', '/* estilos.css */', workspaceStore.cssCode].join('\n'),
-                codeLanguage: 'html'
-              }
-            : { currentCode: workspaceStore.code })
-        }
+        context: proyectoAbierto.value && route.path.startsWith('/estudiante/proyectos/')
+          ? {
+              currentRoute: route.path,
+              proyectoTitulo: proyectoAbierto.value.titulo,
+              proyectoTipo: proyectoAbierto.value.tipo,
+              // Todos los archivos, cada uno con su nombre, para que el Tutor vea el proyecto completo.
+              currentCode: proyectoAbierto.value.archivos.map((a) => `/* ${a.nombre} */\n${a.contenido}`).join('\n\n'),
+              codeLanguage: ({ web: 'html', javascript: 'javascript', pseudocodigo: 'text', diagrama: 'text' } as const)[proyectoAbierto.value.tipo],
+            }
+          : contextoSegunPantalla(route.path, workspaceStore.currentExercise ?? null, {
+              js: workspaceStore.code, html: workspaceStore.htmlCode, css: workspaceStore.cssCode,
+            })
       })
 
       // Actualizar nivel de guía con la respuesta del backend
@@ -332,9 +341,12 @@ export const useTutorStore = defineStore('tutor', () => {
     thinkingSeconds,
     messages,
     guidanceLevel,
+    proyectoAbierto,
+    setProyectoAbierto,
     tutorEnabled,
     dueReviews,
     contentLink,
+    refuerzo,
     hasKey,
     last4,
     showKeyPanel,

@@ -7,7 +7,8 @@ Este proyecto funciona exclusivamente como un laboratorio visual y entorno de pr
 Los siguientes archivos existen solo para que el laboratorio funcione en **MODO DEMO sin backend**. Nunca se copian al proyecto real:
 
 - `frontend-nuxt/plugins/00.lab-demo.client.ts`: intercepta `$fetch` y responde desde la simulación en memoria (200-400 ms de retardo).
-- `frontend-nuxt/lab/`: enrutador de simulación (`mock-api.ts`) y datos de ejemplo (`datos/*.ts`).
+- `frontend-nuxt/lab/`: enrutador de simulación (`mock-api.ts`), lo nuevo desde el 29/09 (`mock-nuevas.ts`: proyectos,
+  entregas, notas, refuerzos, sugerencias, código de clase, cambios de rol, foto, estadísticas) y datos de ejemplo (`datos/*.ts`).
 - `frontend-nuxt/nuxt.config.ts`: `apiBase` vacío, `demoMode` siempre activo y etiquetas `og:`.
 - `frontend-nuxt/pages/auth/login.vue`, **solo estas 4 partes** (el resto del archivo sí se puede copiar):
   1. `const demoModeEnabled = computed(() => true)`
@@ -18,6 +19,20 @@ Los siguientes archivos existen solo para que el laboratorio funcione en **MODO 
 - `package.json` (raíz), `scripts/start-applet.js`, `metadata.json`, `.env.example`, `.gitignore`: arranque del laboratorio.
 
 El backend (`src/`, Docker, despliegue) se eliminó del laboratorio el 2026-09-29: ya no se usa.
+
+## Actualizado con el proyecto real (2 de octubre de 2026)
+
+El laboratorio trae ahora el frontend del proyecto real hasta la versión `v1.1.0` (tag en el repositorio de producción):
+editor de diagramas de flujo, proyectos de pseudocódigo, entregas y su revisión, notas, refuerzos, «Sugerencias»,
+código de clase único con QR y botón «Escanear QR», foto de perfil opcional, multimedia en las lecciones y el Tutor que
+sabe qué lección está leyendo el estudiante. Todo funciona en **modo demo** con datos de ejemplo que se guardan en el
+navegador (crear un proyecto y recargar: sigue ahí; «Reiniciar demo» lo borra).
+
+- Las animaciones de la fila 1 se **volvieron a aplicar** sobre las páginas nuevas del estudiante (inicio, lección y
+  ejercicio cambiaron de estructura en producción): mismas clases (`anim-subir`, `boton-tocar`, `opcion-tocar`,
+  `tarjeta-hover`, `anim-celebracion`, `anim-tranquilo`), en los elementos equivalentes. Siguen «pendiente de revisión».
+- En el demo **no se suben fotos de perfil** (no hay servidor de imágenes): al intentarlo, lo dice.
+- Antes de copiar algo al proyecto real, compararlo con esa versión: el laboratorio ya no está 90 archivos atrás.
 
 ## Registro de Cambios Visuales
 

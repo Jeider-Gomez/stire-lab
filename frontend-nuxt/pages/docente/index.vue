@@ -66,7 +66,7 @@
             </div>
             <span class="text-[10px] font-bold text-stire-teal-dark">Dominio</span>
           </div>
-          <p class="text-2xl font-poppins font-bold text-slate-800">{{ avgMastery }}%</p>
+          <p class="text-2xl font-poppins font-bold text-slate-800">{{ porcentaje(avgMastery) }}</p>
           <!-- Micro barra de progreso -->
           <div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div
@@ -273,7 +273,7 @@
 
             <!-- Matrícula -->
             <NuxtLink
-              :to="`/docente/clase/${cls.id}`"
+              :to="`/docente/clase/${cls.id}/ajustes`"
               class="btn-stire-secondary"
             >
               <Users :size="14" />
@@ -298,13 +298,13 @@
                 class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                 :class="cls.avgMastery >= 70 ? 'bg-stire-success/10 text-stire-success' : 'bg-stire-warning/10 text-stire-warning'"
               >
-                {{ cls.avgMastery }}%
+                {{ porcentaje(cls.avgMastery) }}
               </span>
             </NuxtLink>
 
             <!-- Contenidos -->
             <NuxtLink
-              to="/docente/contenidos"
+              :to="`/docente/contenidos?classId=${cls.id}`"
               class="btn-stire-secondary"
             >
               <BookOpen :size="14" />
@@ -314,13 +314,13 @@
             <!-- Spacer -->
             <div class="flex-1" />
 
-            <!-- Ver detalle -->
+            <!-- La clase como lugar: «Hoy», con las pestañas de la clase (utils/pestanasClase.ts) -->
             <NuxtLink
               :to="`/docente/clase/${cls.id}`"
               class="btn-stire-teal"
             >
               <UserCheck :size="14" />
-              <span>Gestionar</span>
+              <span>Abrir la clase</span>
             </NuxtLink>
           </div>
         </div>
@@ -413,8 +413,13 @@
                     required
                     placeholder="Ej: ALGO-2026-1"
                     class="input-stire font-mono uppercase"
+                    aria-describedby="new-class-code-estado"
                   />
-                  <p class="text-[11px] text-slate-400 mt-1">Los estudiantes usarán este código al matricularse.</p>
+                  <p id="new-class-code-estado" class="text-[11px] mt-1 flex items-center gap-1" :class="estadoCodigo.tipo === 'ocupado' ? 'text-semantico-falla font-semibold' : estadoCodigo.tipo === 'libre' ? 'text-semantico-pasa font-semibold' : 'text-slate-400'" aria-live="polite">
+                    <X v-if="estadoCodigo.tipo === 'ocupado'" :size="12" aria-hidden="true" />
+                    <Check v-else-if="estadoCodigo.tipo === 'libre'" :size="12" aria-hidden="true" />
+                    {{ estadoCodigo.texto }}
+                  </p>
                 </div>
 
                 <!-- Descripción -->
@@ -442,11 +447,16 @@
                     class="input-stire text-xs"
                   >
                     <option :value="null">Empezar vacía</option>
-                    <option v-for="c in classes" :key="c.id" :value="c.id">
-                      {{ c.name }} ({{ c.code }})
-                    </option>
+                    <optgroup v-if="classes.length" label="Mis clases">
+                      <option v-for="c in classes" :key="c.id" :value="c.id">
+                        {{ c.name }} ({{ c.code }})
+                      </option>
+                    </optgroup>
+                    <optgroup v-if="plantillas.length" label="Plantillas de otros docentes">
+                      <option v-for="p in plantillas" :key="`p${p.classId}`" :value="p.classId">{{ textoPlantilla(p) }}</option>
+                    </optgroup>
                   </select>
-                  <p class="text-[11px] text-slate-400 mt-1">Opcional. Se copiarán lecciones y ejercicios en borrador.</p>
+                  <p class="text-[11px] text-slate-400 mt-1">Opcional. Se copian explicaciones y ejercicios en borrador; nunca estudiantes ni notas.</p>
                 </div>
 
                 <!-- Toggle aprobación -->
@@ -517,6 +527,7 @@
             <div>
               <h3 class="font-poppins font-bold text-xl text-slate-800">Código de Clase</h3>
               <p class="text-sm text-slate-400 mt-1">{{ qrModal.className }}</p>
+              <p class="text-xs text-slate-500 mt-2">Que lo escaneen con la cámara del celular: se abre STIRE con el código ya escrito.</p>
             </div>
             <div class="flex items-center justify-center">
               <canvas ref="qrCanvas" class="rounded-2xl shadow-lg" />
@@ -540,10 +551,13 @@
 </template>
 
 <script setup lang="ts">
+import { textoPlantilla, type Plantilla } from '~/utils/plantillas'
+import { porcentaje } from '~/utils/porcentaje'
 import {
   Plus, Users, TrendingUp, BookOpen, AlertTriangle,
-  Mail, Check, Copy, QrCode, UserCheck
+  Mail, Check, Copy, QrCode, UserCheck, X
 } from 'lucide-vue-next'
+import { normalizarCodigo, sugerirCodigo, urlDeIngreso } from '~/utils/codigoClase'
 import { useApi } from '~/composables/useApi'
 const { messageOf } = useApiErrorMessage()
 
@@ -563,6 +577,15 @@ interface TeacherClass {
 
 const api = useApi()
 const classes = ref<TeacherClass[]>([])
+// Contenido que otros docentes compartieron como plantilla, para empezar una clase con él.
+const plantillas = ref<Plantilla[]>([])
+async function fetchPlantillas() {
+  try {
+    plantillas.value = await api.get<Plantilla[]>('/reuse/plantillas')
+  } catch {
+    plantillas.value = []
+  }
+}
 const isLoading = ref(false)
 const copiedCode = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
@@ -617,11 +640,34 @@ function openCreateModal() {
 }
 
 function generateRandomCode() {
-  const randNum = Math.floor(100 + Math.random() * 900)
-  newClass.code = `ALGO-WEB-${randNum}`
+  newClass.code = sugerirCodigo(newClass.name)
 }
 
+// Mientras escribe, si el código sirve y está libre: dos clases nunca comparten código.
+const estadoCodigo = reactive<{ tipo: 'nada' | 'revisando' | 'libre' | 'ocupado'; texto: string }>({ tipo: 'nada', texto: 'Los estudiantes lo escriben o escanean su QR para entrar.' })
+let relojCodigo: ReturnType<typeof setTimeout> | null = null
+watch(() => newClass.code, (texto) => {
+  if (relojCodigo) clearTimeout(relojCodigo)
+  if (!texto.trim()) { Object.assign(estadoCodigo, { tipo: 'nada', texto: 'Los estudiantes lo escriben o escanean su QR para entrar.' }); return }
+  Object.assign(estadoCodigo, { tipo: 'revisando', texto: 'Revisando que nadie lo tenga…' })
+  relojCodigo = setTimeout(async () => {
+    try {
+      const r = await api.get<{ codigo: string; disponible: boolean; motivo: string | null }>(`/class/codigo-disponible?codigo=${encodeURIComponent(texto)}`)
+      if (normalizarCodigo(newClass.code) !== r.codigo) return
+      Object.assign(estadoCodigo, r.disponible
+        ? { tipo: 'libre', texto: r.codigo === newClass.code.trim() ? 'Disponible.' : `Disponible. Se guardará como ${r.codigo}.` }
+        : { tipo: 'ocupado', texto: r.motivo ?? 'No disponible.' })
+    } catch {
+      Object.assign(estadoCodigo, { tipo: 'nada', texto: 'No se pudo revisar ahora; se revisará al crear la clase.' })
+    }
+  }, 400)
+})
+
 async function submitCreateClass() {
+  if (estadoCodigo.tipo === 'ocupado') {
+    errorMessage.value = estadoCodigo.texto + ' Elige otro o pulsa «Generar sugerido».'
+    return
+  }
   if (!newClass.name.trim() || !newClass.code.trim()) {
     errorMessage.value = 'El nombre y el código de la clase son obligatorios.'
     return
@@ -631,7 +677,7 @@ async function submitCreateClass() {
   try {
     const res = await api.post<TeacherClass>('/class', {
       name: newClass.name.trim(),
-      code: newClass.code.trim().toUpperCase(),
+      code: normalizarCodigo(newClass.code),
       description: newClass.description.trim() || undefined,
       requiresApproval: newClass.requiresApproval
     })
@@ -692,7 +738,8 @@ async function openQrModal(cls: TeacherClass) {
   if (qrCanvas.value) {
     try {
       const QRCode = await import('qrcode')
-      await QRCode.toCanvas(qrCanvas.value, cls.code, {
+      // El QR lleva la página para unirse con el código ya escrito: la cámara del celular la abre sola.
+      await QRCode.toCanvas(qrCanvas.value, urlDeIngreso(window.location.origin, cls.code), {
         width: 220,
         margin: 2,
         color: { dark: '#0B3D91', light: '#FFFFFF' }
@@ -712,6 +759,7 @@ async function fetchUnreadMessages() {
 }
 
 onMounted(() => {
+  fetchPlantillas()
   fetchClasses()
   fetchUnreadMessages()
 })

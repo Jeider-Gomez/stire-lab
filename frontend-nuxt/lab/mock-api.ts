@@ -4,6 +4,7 @@ import { ESTUDIANTE_ANALYTICS, REPASOS_ESPACIADOS_INICIALES, CONFIANZAS_UNIDAD_I
 import { TUTOR_API_KEY_INICIAL, TUTOR_GUIDANCE_INICIAL, TUTOR_MENSAJES_INICIALES, TUTOR_SETTINGS_DEFAULT, obtenerRespuestaTutor } from './datos/tutor'
 import { MENSAJES_INICIALES, NOTIFICACIONES_INICIALES } from './datos/mensajes'
 import { SISTEMA_STATUS_INICIAL, SISTEMA_LOGS_INICIAL } from './datos/sistema'
+import { estadoNuevoInicial, responderNuevas, SIN_SIMULAR, anotarCambioDeRol } from './mock-nuevas'
 
 // Estado mutable en memoria durante la sesión del navegador
 const state = {
@@ -27,6 +28,8 @@ const state = {
   sistemaStatus: { ...SISTEMA_STATUS_INICIAL },
   sistemaLogs: JSON.parse(JSON.stringify(SISTEMA_LOGS_INICIAL)),
   submissions: {} as Record<string, any>,
+  // Lo que llegó al proyecto real después del 29/09 (proyectos, entregas, refuerzos, sugerencias, cambios de rol…).
+  ...estadoNuevoInicial(),
 }
 
 // El estado se guarda en localStorage de este navegador: así una recarga (F5, o la vista previa de AI Studio al
@@ -55,6 +58,10 @@ async function responder(method: string, fullPath: string, options: any = {}): P
   const [pathname, queryString] = fullPath.split('?')
   const query = new URLSearchParams(queryString || '')
   const body = options?.body || {}
+
+  // Rutas nuevas (lab/mock-nuevas.ts): primero, porque no se cruzan con las de abajo.
+  const nueva = responderNuevas({ method, pathname, query, body, st: state, usuario: state.currentUser, usuarios: state.usuarios, clases: state.clases, secciones: state.secciones, actividades: state.actividades })
+  if (nueva !== SIN_SIMULAR) return nueva
 
   // ==========================================
   // AUTENTICACIÓN
@@ -179,9 +186,14 @@ async function responder(method: string, fullPath: string, options: any = {}): P
       }))
     }
     if (method === 'POST') {
+      // Como en la app real: un código por clase, sin importar cómo se escriba.
+      const codigo = String(body.code || `CLASE-${Date.now().toString().slice(-4)}`).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase().replace(/[\s_]+/g, '-')
+      if (state.clases.some((c: { code: string }) => c.code.toUpperCase() === codigo)) {
+        throw Object.assign(new Error('Ya existe una clase con ese código.'), { statusCode: 409, data: { statusCode: 409, error: 'Ya existe una clase con ese código. Elige otro.' } })
+      }
       const newClass = {
         id: state.clases.length + 1,
-        code: body.code || `CLASS-${Date.now().toString().slice(-4)}`,
+        code: codigo,
         name: body.name || 'Nueva Clase de Algoritmos',
         description: body.description || '',
         teacherId: state.currentUser.id,
@@ -852,7 +864,10 @@ async function responder(method: string, fullPath: string, options: any = {}): P
   if (userRoleMatch && method === 'PATCH') {
     const uid = Number(userRoleMatch[1])
     const u = state.usuarios.find(user => user.id === uid)
-    if (u && body.role) u.role = body.role
+    if (u && body.role) {
+      anotarCambioDeRol(state, u, u.role, body.role, state.currentUser)
+      u.role = body.role
+    }
     return { message: 'Rol de usuario actualizado exitosamente.' }
   }
 

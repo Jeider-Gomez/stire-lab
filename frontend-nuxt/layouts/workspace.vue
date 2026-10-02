@@ -7,7 +7,7 @@
           :to="backLink"
           class="borde-afordancia px-2.5 py-1 rounded text-xs font-medium text-base-texto-secundario hover:text-base-texto-primario flex items-center gap-1">
           <ArrowLeft :size="14" aria-hidden="true" />
-          <span>Volver a la unidad</span>
+          <span>Volver a la lección</span>
         </NuxtLink>
 
         <div class="h-4 w-[1px] bg-base-borde-sutil"></div>
@@ -41,8 +41,11 @@
       <!-- Acciones Principales (Zona D Integrada) -->
       <div class="flex items-center gap-2">
         <!-- Tutor IA Trigger -->
+        <!-- En el teléfono solo se ve el ícono: el nombre accesible dice qué hace (el lector de pantalla no leía nada). -->
         <button
           @click="tutorStore.toggleDrawer()"
+          aria-label="Abrir el Tutor IA"
+          title="Tutor IA"
           class="borde-afordancia px-2.5 py-1.5 rounded text-xs font-semibold text-acento-ambar-fuerte hover:bg-acento-ambar/10 flex items-center gap-1">
           <Sparkles :size="14" aria-hidden="true" />
           <span class="hidden md:inline">Tutor IA</span>

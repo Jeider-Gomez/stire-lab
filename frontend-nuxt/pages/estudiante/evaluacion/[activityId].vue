@@ -6,7 +6,7 @@
       <div class="flex items-center border-b border-base-borde-sutil bg-base-bg-secundario text-xs font-semibold px-2 pt-2 gap-1 flex-shrink-0">
         <button
           @click="leftTab = 'enunciado'"
-          class="px-3 py-2 rounded-t-md transition-all duration-150 active:scale-[0.98]"
+          class="px-3 py-2 rounded-t-md transition-colors"
           :class="leftTab === 'enunciado' ? 'bg-base-blanco text-base-texto-primario border-t-2 border-acento-ambar-fuerte font-bold' : 'text-base-texto-secundario hover:text-base-texto-primario'">
           <span class="inline-flex items-center gap-1.5"><BookOpen :size="14" aria-hidden="true" /> Enunciado</span>
         </button>
@@ -15,12 +15,12 @@
         <button
           v-if="isCodingActivity"
           @click="leftTab = 'casos'"
-          class="px-3 py-2 rounded-t-md transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5"
+          class="px-3 py-2 rounded-t-md transition-colors flex items-center gap-1.5"
           :class="leftTab === 'casos' ? 'bg-base-blanco text-base-texto-primario border-t-2 border-acento-ambar-fuerte font-bold' : 'text-base-texto-secundario hover:text-base-texto-primario'">
           <span class="inline-flex items-center gap-1.5"><FlaskConical :size="14" aria-hidden="true" /> Casos de prueba</span>
           <span
             v-if="passedCount > 0"
-            class="px-1.5 py-0.2 rounded-full text-[10px] transition-transform duration-200"
+            class="px-1.5 py-0.2 rounded-full text-[10px]"
             :class="passedCount === workspaceStore.publicTestCases.length ? 'bg-semantico-pasa/15 text-semantico-pasa font-bold' : 'bg-acento-ambar/15 text-acento-ambar-fuerte font-bold'">
             {{ passedCount }}/{{ workspaceStore.publicTestCases.length }}
           </span>
@@ -28,7 +28,7 @@
 
         <button
           @click="leftTab = 'consola'"
-          class="px-3 py-2 rounded-t-md transition-all duration-150 active:scale-[0.98]"
+          class="px-3 py-2 rounded-t-md transition-colors"
           :class="leftTab === 'consola' ? 'bg-base-blanco text-base-texto-primario border-t-2 border-acento-ambar-fuerte font-bold' : 'text-base-texto-secundario hover:text-base-texto-primario'">
           <span class="inline-flex items-center gap-1.5"><Terminal :size="14" aria-hidden="true" /> Registro</span>
         </button>
@@ -237,13 +237,14 @@
               :show-statement="!workspaceStore.currentExercise.description" />
           </template>
 
+          <p v-else-if="workspaceStore.loadError" role="alert" class="text-xs text-semantico-falla py-6">No se pudo cargar el ejercicio: {{ workspaceStore.loadError }}</p>
           <div v-else class="animate-pulse space-y-3 py-6" aria-label="Cargando el ejercicio">
             <div class="h-4 bg-base-bg-secundario rounded w-3/4"></div>
             <div class="h-20 bg-base-bg-secundario rounded"></div>
           </div>
         </section>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 anim-subir" style="--stagger: 2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <p class="text-[11px] text-base-texto-secundario">
             <span v-if="typeInfo">{{ typeInfo.grading }} · </span>
             <template v-if="remainingAttempts > 0">Te {{ remainingAttempts === 1 ? 'queda 1 intento' : `quedan ${remainingAttempts} intentos` }}.</template>
@@ -253,7 +254,7 @@
             type="button"
             @click="workspaceStore.submitSolution()"
             :disabled="!canSubmitAnswer"
-            class="boton-tocar px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte text-base-blanco text-sm font-bold hover:bg-acento-ambar inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none">
+            class="boton-tocar px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte text-base-blanco text-sm font-bold hover:bg-acento-ambar inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte">
             <Send :size="16" aria-hidden="true" />
             {{ workspaceStore.isSubmitting ? 'Calificando…' : 'Entregar respuesta' }}
           </button>
@@ -262,71 +263,67 @@
     </div>
 
     <!-- Modal de Resultado de Entrega (refleja el resultado real del backend) -->
-    <Transition name="modal-resultado">
-      <div
-        v-if="workspaceStore.submissionResult"
-        class="fixed inset-0 bg-base-texto-primario/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="modal-tarjeta bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 max-w-md w-full shadow-2xl space-y-4 text-center">
-          <div
-            class="w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto font-bold"
-            :class="[
-              isSuccessResult ? 'bg-semantico-pasa/15 text-semantico-pasa anim-celebracion' : 'bg-acento-ambar/15 text-acento-ambar-fuerte anim-tranquilo'
-            ]">
-            <PartyPopper v-if="isSuccessResult" :size="28" aria-hidden="true" />
-            <ClipboardCheck v-else :size="28" aria-hidden="true" />
-          </div>
+    <div
+      v-if="workspaceStore.submissionResult"
+      class="fixed inset-0 bg-base-texto-primario/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 max-w-md w-full shadow-2xl space-y-4 text-center">
+        <div
+          class="w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto font-bold"
+          :class="isSuccessResult ? 'bg-semantico-pasa/15 text-semantico-pasa anim-celebracion' : 'bg-acento-ambar/15 text-acento-ambar-fuerte anim-tranquilo'">
+          <PartyPopper v-if="isSuccessResult" :size="28" aria-hidden="true" />
+          <ClipboardCheck v-else :size="28" aria-hidden="true" />
+        </div>
 
-          <h3 class="text-lg font-bold text-base-texto-primario">
-            {{ isSuccessResult ? '¡Bien hecho!' : 'Tu intento ya tiene nota' }}
-          </h3>
+        <h3 class="text-lg font-bold text-base-texto-primario">
+          {{ isSuccessResult ? '¡Bien hecho!' : 'Tu intento ya tiene nota' }}
+        </h3>
 
-          <div class="p-3 bg-base-bg-secundario rounded-lg border border-base-borde-sutil">
-            <p class="text-2xl font-bold" :class="isSuccessResult ? 'text-semantico-pasa' : 'text-semantico-falla'">
-              {{ workspaceStore.submissionResult?.totalScore ?? 0 }} / {{ resultMaxScore }} pts
-            </p>
-            <p v-if="isCodingActivity" class="text-xs text-base-texto-secundario mt-1">
-              <!-- passedCount/totalCount cuentan preguntas (respuestas correctas), no casos de prueba: una pregunta de código con
-                   2 casos (1 oculto) mostraba «1 de 1 casos». -->
-              Resolviste bien {{ workspaceStore.submissionResult?.passedCount ?? 0 }} de {{ workspaceStore.submissionResult?.totalCount ?? 0 }} {{ (workspaceStore.submissionResult?.totalCount ?? 0) === 1 ? 'ejercicio' : 'ejercicios' }} (cada uno se califica con todos sus casos de prueba, también los ocultos).
-            </p>
-            <p v-else-if="isHtmlCssActivity" class="text-xs text-base-texto-secundario mt-1">
-              Solución HTML y CSS evaluada contra las reglas del docente.
-            </p>
-            <p v-else class="text-xs text-base-texto-secundario mt-1">
-              Tu resultado ya cuenta en tu progreso.
-            </p>
-          </div>
-
-          <!-- Dominio de la unidad: la señal que de verdad importa para el
-               estudiante, más allá del puntaje crudo de un solo intento. -->
-          <div v-if="masteryDelta" class="p-3 bg-acento-ambar/10 rounded-lg border border-acento-ambar/30">
-            <p class="text-sm font-semibold text-base-texto-primario">
-              Tu dominio de esta unidad {{ masteryDelta.diff > 0 ? 'subió a' : 'se mantiene en' }}
-              <span class="text-acento-ambar-fuerte">{{ masteryDelta.after }}%</span>
-              <span v-if="masteryDelta.diff > 0" class="text-semantico-pasa"> (+{{ masteryDelta.diff }}%)</span>
-            </p>
-          </div>
-
-          <p v-if="workspaceStore.submissionResult?.feedback" class="text-xs text-base-texto-secundario">
-            {{ workspaceStore.submissionResult.feedback }}
+        <div class="p-3 bg-base-bg-secundario rounded-lg border border-base-borde-sutil">
+          <p class="text-2xl font-bold" :class="isSuccessResult ? 'text-semantico-pasa' : 'text-semantico-falla'">
+            {{ workspaceStore.submissionResult?.totalScore ?? 0 }} / {{ resultMaxScore }} pts
           </p>
+          <p v-if="isCodingActivity" class="text-xs text-base-texto-secundario mt-1">
+            <!-- passedCount/totalCount cuentan preguntas (respuestas correctas), no casos de prueba: una pregunta de código con
+                 2 casos (1 oculto) mostraba «1 de 1 casos». -->
+            Resolviste bien {{ workspaceStore.submissionResult?.passedCount ?? 0 }} de {{ workspaceStore.submissionResult?.totalCount ?? 0 }} {{ (workspaceStore.submissionResult?.totalCount ?? 0) === 1 ? 'ejercicio' : 'ejercicios' }} (cada uno se califica con todos sus casos de prueba, también los ocultos).
+          </p>
+          <p v-else-if="isHtmlCssActivity" class="text-xs text-base-texto-secundario mt-1">
+            Solución HTML y CSS evaluada contra las reglas del docente.
+          </p>
+          <p v-else class="text-xs text-base-texto-secundario mt-1">
+            Tu resultado ya cuenta en tu progreso.
+          </p>
+        </div>
 
-          <div class="flex items-center gap-2 pt-2">
-            <button
-              @click="workspaceStore.submissionResult = null"
-              class="boton-tocar flex-1 py-2 rounded-md borde-afordancia text-xs font-semibold bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario">
-              Seguir practicando
-            </button>
+        <!-- Dominio de la unidad: la señal que de verdad importa para el
+             estudiante, más allá del puntaje crudo de un solo intento. -->
+        <div v-if="masteryDelta" class="p-3 bg-acento-ambar/10 rounded-lg border border-acento-ambar/30">
+          <p class="text-sm font-semibold text-base-texto-primario">
+            Tu dominio de esta lección {{ masteryDelta.diff > 0 ? 'subió a' : 'se mantiene en' }}
+            <span class="text-acento-ambar-fuerte">{{ masteryDelta.after }}%</span>
+            <span v-if="masteryDelta.diff > 0" class="text-semantico-pasa"> (+{{ masteryDelta.diff }}%)</span>
+          </p>
+        </div>
 
-            <NuxtLink
-              to="/estudiante"
-              class="boton-tocar flex-1 py-2 rounded-md bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco text-xs font-bold text-center">
-              Volver al Inicio
-            </NuxtLink>
-          </div>
+        <p v-if="workspaceStore.submissionResult?.feedback" class="text-xs text-base-texto-secundario">
+          {{ workspaceStore.submissionResult.feedback }}
+        </p>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button
+            @click="workspaceStore.submissionResult = null"
+            class="flex-1 py-2 rounded-md borde-afordancia text-xs font-semibold bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario transition-colors">
+            Seguir practicando
+          </button>
+
+          <NuxtLink
+            to="/estudiante"
+            class="flex-1 py-2 rounded-md bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco text-xs font-bold transition-colors">
+            Volver al Inicio
+          </NuxtLink>
         </div>
       </div>
-    </Transition>
+    </div>
   </div>
 </template>
 

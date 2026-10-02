@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-6">
+    <DocentePestanasClase v-if="selectedClassId" :class-id="selectedClassId" activa="contenido" :nombre="selectedClass?.name" :codigo="selectedClass?.code" />
     <!-- Cabecera DOC-V02 -->
     <header class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -7,13 +8,13 @@
           Contenidos del curso
         </h1>
         <p class="text-xs text-base-texto-secundario mt-0.5 max-w-md">
-          Organiza el curso en módulos, temas y unidades. Abre una unidad para escribir sus lecciones y crear sus ejercicios.
+          Organiza el curso en módulos, temas y lecciones. Abre una lección para escribir su explicación y crear sus ejercicios.
         </p>
       </div>
 
       <!-- Selector de Clase y Botón Nuevo Módulo -->
       <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2">
+        <div v-if="teacherClasses.length > 1" class="flex items-center gap-2">
           <label for="class-selector" class="text-xs font-semibold text-base-texto-secundario whitespace-nowrap">Clase:</label>
           <select
             id="class-selector"
@@ -37,7 +38,7 @@
 
         <!-- Botón Traer de otra clase (T3) -->
         <button
-          v-if="selectedClassId && otherClasses.length > 0"
+          v-if="selectedClassId && (otherClasses.length > 0 || plantillas.length > 0)"
           type="button"
           @click="openImportModal"
           class="px-3 py-1.5 rounded-md borde-afordancia bg-base-blanco text-base-texto-primario font-semibold text-xs hover:bg-base-bg-secundario transition-colors flex items-center gap-1.5 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte shadow-sm"
@@ -94,7 +95,7 @@
           <span>Crear primer módulo</span>
         </button>
         <button
-          v-if="selectedClassId && otherClasses.length > 0"
+          v-if="selectedClassId && (otherClasses.length > 0 || plantillas.length > 0)"
           type="button"
           @click="openImportModal"
           class="px-4 py-2 rounded-md borde-afordancia bg-base-blanco text-base-texto-primario font-semibold text-xs hover:bg-base-bg-secundario transition-colors inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte shadow-sm">
@@ -168,8 +169,8 @@
                 <button
                   @click="openNewUnitModal(sec, topic)"
                   class="px-2 py-0.5 rounded text-[11px] font-semibold bg-acento-ambar-fuerte/10 border border-acento-ambar-fuerte/30 text-acento-ambar-fuerte hover:bg-acento-ambar/20 transition-colors focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
-                  :aria-label="`Nueva unidad en tema ${topic.title}`">
-                  + Nueva unidad
+                  :aria-label="`Nueva lección en el tema ${topic.title}`">
+                  + Nueva lección
                 </button>
                 <button
                   @click="openEditTopicModal(topic)"
@@ -212,7 +213,7 @@
                     <button
                       @click="openEditUnitModal(unit)"
                       class="p-1 rounded text-base-texto-secundario hover:text-base-texto-primario hover:bg-base-blanco focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
-                      :aria-label="`Editar unidad ${unit.title}`" title="Editar unidad">
+                      :aria-label="`Editar la lección ${unit.title}`" title="Editar lección">
                       <Pencil :size="14" aria-hidden="true" />
                     </button>
                   </div>
@@ -228,13 +229,13 @@
                       <button
                         @click="openLessonsModal(unit, lessonsByUnit[unit.id]?.length ? {} : { create: true })"
                         class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-acento-ambar-fuerte text-base-blanco hover:bg-acento-ambar inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
-                        :aria-label="`Gestionar lecciones de la unidad ${unit.title}`">
-                        <BookOpen :size="14" aria-hidden="true" /> {{ lessonsByUnit[unit.id]?.length ? 'Lecciones' : 'Escribir lección' }}
+                        :aria-label="`Explicación de la lección ${unit.title}`">
+                        <BookOpen :size="14" aria-hidden="true" /> {{ lessonsByUnit[unit.id]?.length ? 'Explicación' : 'Escribir la explicación' }}
                       </button>
                     </div>
-                    <p v-if="!lessonsByUnit[unit.id]" class="text-[11px] text-base-texto-secundario animate-pulse">Cargando lecciones…</p>
+                    <p v-if="!lessonsByUnit[unit.id]" class="text-[11px] text-base-texto-secundario animate-pulse">Cargando la explicación…</p>
                     <p v-else-if="lessonsByUnit[unit.id].length === 0" class="text-[11px] text-base-texto-secundario italic">
-                      Sin lecciones. Una lección corta con un ejemplo prepara al estudiante antes de los ejercicios.
+                      Sin explicación. Una explicación corta con un ejemplo prepara al estudiante antes de los ejercicios.
                     </p>
                     <ul v-else class="divide-y divide-base-borde-sutil rounded-lg border border-base-borde-sutil bg-base-blanco">
                       <li v-for="l in lessonsByUnit[unit.id]" :key="l.id">
@@ -242,7 +243,7 @@
                           type="button"
                           @click="openLessonsModal(unit, { editId: l.id })"
                           class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-base-bg-secundario focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte rounded-lg"
-                          :aria-label="`Editar la lección ${l.title}`">
+                          :aria-label="`Editar la explicación ${l.title}`">
                           <span class="flex items-center gap-2 min-w-0">
                             <FileText :size="14" class="shrink-0 text-base-texto-secundario" aria-hidden="true" />
                             <span class="truncate text-base-texto-primario">{{ l.title }}</span>
@@ -262,7 +263,7 @@
               </div>
             </div>
             <div v-else class="text-[11px] text-base-texto-secundario pl-4 italic">
-              Sin unidades asociadas aún.
+              Este tema todavía no tiene lecciones.
             </div>
           </div>
         </div>
@@ -390,11 +391,11 @@
         <div class="absolute inset-0 bg-base-texto-primario/40 backdrop-blur-sm" aria-hidden="true"></div>
         <div class="relative bg-base-blanco rounded-2xl border border-base-borde-fuerte shadow-xl w-full max-w-md p-6 space-y-4">
           <div class="flex items-center justify-between">
-            <h2 id="modal-unit-title" class="text-sm font-bold text-base-texto-primario">Editar Unidad de Aprendizaje</h2>
+            <h2 id="modal-unit-title" class="text-sm font-bold text-base-texto-primario">Editar la lección</h2>
             <button
               @click="closeEditUnitModal"
               class="text-base-texto-secundario hover:text-base-texto-primario transition-colors focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte rounded"
-              aria-label="Cerrar modal de edición de unidad">
+              aria-label="Cerrar la edición de la lección">
               ✕
             </button>
           </div>
@@ -445,7 +446,7 @@
             <!-- Sección plegable: Tutor IA en esta unidad (§20.1) -->
             <details v-if="editUnitModal.unitId" class="border-t border-base-borde-sutil pt-3">
               <summary class="text-[11px] font-semibold text-base-texto-secundario cursor-pointer hover:text-base-texto-primario select-none flex items-center gap-1.5">
-                <span aria-hidden="true">🤖</span> Tutor IA en esta unidad
+                Tutor IA en esta lección
               </summary>
               <div class="mt-3">
                 <DocenteTutorSettingsPanel scope-type="unit" :scope-id="editUnitModal.unitId" />
@@ -502,7 +503,7 @@
           </div>
 
           <p class="text-xs text-base-texto-secundario">
-            Se copian lecciones y ejercicios <strong>sin publicar</strong>. No se copian estudiantes ni notas.
+            Se copian explicaciones y ejercicios <strong>sin publicar</strong>. No se copian estudiantes ni notas.
           </p>
 
           <!-- Selector de clase origen -->
@@ -516,9 +517,14 @@
               v-model="importModal.sourceClassId"
               @change="onSourceClassChange"
               class="w-full text-xs bg-base-blanco text-base-texto-primario border border-base-borde-fuerte rounded-md px-3 py-2 outline-none focus:border-acento-ambar-fuerte">
-              <option v-for="c in otherClasses" :key="c.id" :value="c.id">
-                {{ c.name }} ({{ c.code }})
-              </option>
+              <optgroup v-if="otherClasses.length" label="Mis clases">
+                <option v-for="c in otherClasses" :key="c.id" :value="c.id">
+                  {{ c.name }} ({{ c.code }})
+                </option>
+              </optgroup>
+              <optgroup v-if="plantillas.length" label="Plantillas de otros docentes">
+                <option v-for="p in plantillas" :key="`p${p.classId}`" :value="p.classId">{{ textoPlantilla(p) }}</option>
+              </optgroup>
             </select>
           </div>
 
@@ -610,6 +616,7 @@
 </template>
 
 <script setup lang="ts">
+import { textoPlantilla, type Plantilla } from '~/utils/plantillas'
 import { ChevronRight, Pencil, BookOpen, FileText, CopyPlus, Loader2 } from 'lucide-vue-next'
 import { useApi } from '~/composables/useApi'
 import CurriculumBuilderModals from '~/components/docente/CurriculumBuilderModals.vue'
@@ -702,7 +709,7 @@ const unitSummary = computed(() => {
   const ids = new Set([...Object.keys(lessonsByUnit), ...Object.keys(exerciseCountByUnit)].map(Number))
   for (const id of ids) {
     const parts: string[] = []
-    if (lessonsByUnit[id] !== undefined) parts.push(plural(lessonsByUnit[id].length, 'lección', 'lecciones'))
+    if (lessonsByUnit[id] !== undefined) parts.push(plural(lessonsByUnit[id].length, 'explicación', 'explicaciones'))
     if (exerciseCountByUnit[id] !== undefined) parts.push(plural(exerciseCountByUnit[id], 'ejercicio', 'ejercicios'))
     out[id] = parts.join(' · ')
   }
@@ -914,10 +921,10 @@ async function submitEditUnit() {
         }
       }
     }
-    actionFeedback.value = `Unidad "${editUnitModal.form.title}" actualizada correctamente.`
+    actionFeedback.value = `Lección "${editUnitModal.form.title}" actualizada.`
     closeEditUnitModal()
   } catch (err: any) {
-    editUnitModal.error = messageOf(err, 'Error al actualizar la unidad.')
+    editUnitModal.error = messageOf(err, 'No se pudo actualizar la lección.')
   } finally {
     editUnitModal.saving = false
   }
@@ -1010,6 +1017,16 @@ interface ResumenImportacion {
 const otherClasses = computed(() => {
   return teacherClasses.value.filter(c => c.id !== selectedClassId.value)
 })
+// Contenido que otros docentes compartieron como plantilla (utils/plantillas.ts).
+const plantillas = ref<Plantilla[]>([])
+async function cargarPlantillas() {
+  try {
+    plantillas.value = await api.get<Plantilla[]>('/reuse/plantillas')
+  } catch {
+    plantillas.value = []
+  }
+}
+onMounted(cargarPlantillas)
 
 const importModal = reactive({
   open: false,
@@ -1030,8 +1047,9 @@ function openImportModal() {
   importModal.open = true
   importModal.error = null
   nextTick(() => importSourceRef.value?.focus())
-  if (otherClasses.value.length > 0) {
-    importModal.sourceClassId = otherClasses.value[0].id
+  const primera = otherClasses.value[0]?.id ?? plantillas.value[0]?.classId
+  if (primera) {
+    importModal.sourceClassId = primera
     onSourceClassChange()
   } else {
     importModal.sourceClassId = null
@@ -1055,7 +1073,8 @@ async function onSourceClassChange() {
   importModal.isLoadingSections = true
   importModal.error = null
   try {
-    const res = await api.get<Array<{ id: number; title: string; order: number }>>(`/sections/class/${importModal.sourceClassId}`)
+    // Sirve para una clase propia y para una plantilla de otro docente (cuyos módulos no se leen por /sections).
+    const res = await api.get<Array<{ id: number; title: string; order: number }>>(`/reuse/classes/${importModal.sourceClassId}/modulos`)
     importModal.sections = Array.isArray(res) ? res : []
     importModal.selectedSectionIds = importModal.sections.map(s => s.id)
   } catch (err: unknown) {

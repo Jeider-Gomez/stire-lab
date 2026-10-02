@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia'
-import type { CourseModule, LearningUnit, SpacedReviewItem, StudentAnalytics, UnitStatus } from '~/types'
+import { computed } from 'vue'
+import type { CourseModule, CourseTopic, LearningUnit, SpacedReviewItem, StudentAnalytics, UnitStatus } from '~/types'
+import { DOMINADO } from '~/utils/terminos'
+import { calcularAvance } from '~/utils/avanceCurso'
 import { useApi } from '~/composables/useApi'
 import { useAuthStore } from './auth'
 
@@ -30,6 +33,10 @@ export const useStudentStore = defineStore('student', () => {
 
   // Repasos de repetición espaciada: cargados en vivo desde GET /review-schedules/due (SM-2)
   const reviews = ref<SpacedReviewItem[]>([])
+  /** Solo los repasos que tocan hoy (vencidos o críticos): los de mañana o al día no son «pendientes para hoy». */
+  const reviewsDueToday = computed(() => reviews.value.filter((r) => r.urgency === 'vencido' || r.urgency === 'critico'))
+  /** false hasta la primera carga completa: mientras tanto las pantallas muestran «—», no un 0 que parece real. */
+  const hasLoaded = ref(false)
 
   // Analítica real: cargada en vivo desde GET /analytics/student/:id
   const analytics = ref<StudentAnalytics>({
@@ -54,6 +61,9 @@ export const useStudentStore = defineStore('student', () => {
       modules.value[0]?.units[0]
     )
   })
+
+  /** Avance honesto de ESTA clase: lecciones dominadas de todas, y dominio solo de las trabajadas (utils/avanceCurso.ts). */
+  const avanceCurso = computed(() => calcularAvance(modules.value.flatMap((m) => m.units)))
 
   /**
    * Cambia la clase activa y recarga el plan curricular
@@ -160,7 +170,7 @@ export const useStudentStore = defineStore('student', () => {
               },
               masteryByUnit: (analyticsData.masteryByUnit || []).map(m => {
                 const calculatedStatus: UnitStatus =
-                  m.mastery >= 80 ? 'dominado' : m.mastery > 0 ? 'en-progreso' : 'por-iniciar'
+                  m.mastery >= DOMINADO ? 'dominado' : m.mastery > 0 ? 'en-progreso' : 'por-iniciar'
                 masteryMap.set(m.unitId, { mastery: m.mastery, status: calculatedStatus })
                 return {
                   unitId: m.unitId,
@@ -214,12 +224,14 @@ export const useStudentStore = defineStore('student', () => {
           if (Array.isArray(sections) && sections.length > 0) {
             modules.value = sections
               .filter(sec => sec.isPublished !== false)
-              .map((sec, secIdx) => {
+              .map((sec) => {
               const allUnits: LearningUnit[] = []
+              const topics: CourseTopic[] = []
 
               if (Array.isArray(sec.topics)) {
                 for (const top of sec.topics) {
                   if (top.isActive === false) continue
+                  const topic: CourseTopic = { id: top.id, title: top.title, units: [] }
                   if (Array.isArray(top.learningUnits)) {
                     for (const u of top.learningUnits) {
                       if (u.isActive === false) continue
@@ -227,12 +239,10 @@ export const useStudentStore = defineStore('student', () => {
                       const mastery = tracked ? tracked.mastery : 0
 
                       let status: UnitStatus = 'por-iniciar'
-                      if (mastery >= 80) {
+                      if (mastery >= DOMINADO) {
                         status = 'dominado'
-                      } else if (mastery > 0) {
+                      } else if (mastery > 0 || tracked) {
                         status = 'en-progreso'
-                      } else if (allUnits.length === 0 && secIdx === 0) {
-                        status = 'por-iniciar'
                       }
 
                       const validActivities = (u.activities || []).filter(a => !a.status || a.status === 'published')
@@ -244,10 +254,13 @@ export const useStudentStore = defineStore('student', () => {
                         a.title.toLowerCase().includes('desafío')
                       ) || validActivities[0]
 
-                      allUnits.push({
+                      const leccion: LearningUnit = {
                         id: u.id,
                         moduleId: sec.id,
                         moduleTitle: sec.title,
+                        topicId: top.id,
+                        topicTitle: top.title,
+                        empezada: !!tracked,
                         title: u.title,
                         description: u.description || '',
                         order: u.order,
@@ -255,9 +268,12 @@ export const useStudentStore = defineStore('student', () => {
                         masteryPercentage: Math.round(mastery),
                         exerciseActivityId: codingAct?.id,
                         activities: validActivities
-                      })
+                      }
+                      allUnits.push(leccion)
+                      topic.units.push(leccion)
                     }
                   }
+                  if (topic.units.length > 0) topics.push(topic)
                 }
               }
 
@@ -265,7 +281,8 @@ export const useStudentStore = defineStore('student', () => {
                 id: sec.id,
                 title: sec.title,
                 order: sec.order,
-                units: allUnits
+                units: allUnits,
+                topics
               }
             })
           }
@@ -323,6 +340,7 @@ export const useStudentStore = defineStore('student', () => {
       lastSyncTime.value = `Sincronizado ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
     } finally {
       isSyncing.value = false
+      hasLoaded.value = true
     }
   }
 
@@ -336,8 +354,11 @@ export const useStudentStore = defineStore('student', () => {
     lastSyncTime,
     modules,
     reviews,
+    reviewsDueToday,
+    hasLoaded,
     analytics,
     activeUnit,
+    avanceCurso,
     selectClass,
     fetchStudentData
   }

@@ -1,9 +1,10 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-6">
+    <DocentePestanasClase v-if="claseDeLaFicha" :class-id="claseDeLaFicha" activa="estudiantes" />
     <!-- Navegación de retorno -->
     <div class="flex items-center gap-2 text-xs">
       <NuxtLink
-        to="/docente/rendimiento"
+        :to="volverAlGrupo"
         class="borde-afordancia px-2.5 py-1 rounded text-base-texto-secundario hover:text-base-texto-primario flex items-center gap-1">
         <span>◀</span>
         <span>Volver a Rendimiento del Grupo</span>
@@ -26,12 +27,24 @@
         </p>
       </div>
 
-      <NuxtLink
-        to="/docente/mensajes"
-        class="px-3.5 py-2 rounded-md borde-afordancia text-xs font-semibold text-acento-ambar-fuerte hover:bg-acento-ambar/10 transition-colors flex items-center gap-1.5 self-start sm:self-auto">
-        <span>✉️</span>
-        <span>Enviar Mensaje Directo</span>
-      </NuxtLink>
+      <!-- La intervención individual (docs/DISENO_INTERVENCION_DOCENTE.md §4.2): refuerzo, reto o mensaje desde la ficha. -->
+      <div class="flex flex-wrap gap-2 self-start sm:self-auto">
+        <NuxtLink
+          :to="enlaceNuevoRefuerzo(claseDeLaFicha, 'refuerzo', [Number(route.params.studentId)])"
+          class="px-3.5 py-2 rounded-md bg-acento-ambar-fuerte text-base-blanco text-xs font-bold flex items-center gap-1.5">
+          <LifeBuoy :size="14" aria-hidden="true" /> Asignar refuerzo
+        </NuxtLink>
+        <NuxtLink
+          :to="enlaceNuevoRefuerzo(claseDeLaFicha, 'reto', [Number(route.params.studentId)])"
+          class="px-3.5 py-2 rounded-md borde-afordancia text-xs font-semibold flex items-center gap-1.5">
+          <Rocket :size="14" aria-hidden="true" /> Reto
+        </NuxtLink>
+        <NuxtLink
+          to="/docente/mensajes"
+          class="px-3.5 py-2 rounded-md borde-afordancia text-xs font-semibold text-acento-ambar-fuerte hover:bg-acento-ambar/10 transition-colors flex items-center gap-1.5">
+          <Mail :size="14" aria-hidden="true" /> Mensaje
+        </NuxtLink>
+      </div>
     </header>
 
     <!-- ESTADO 1: Cargando -->
@@ -50,7 +63,7 @@
           Reintentar
         </button>
         <NuxtLink
-          to="/docente/rendimiento"
+          :to="volverAlGrupo"
           class="px-4 py-1.5 rounded-md bg-acento-ambar-fuerte text-base-blanco font-bold">
           Volver a Cohorte
         </NuxtLink>
@@ -60,46 +73,34 @@
     <!-- ESTADO 3: Con Datos -->
     <div v-else-if="dashboard" class="space-y-6">
       <!-- Tarjetas KPI -->
-      <section class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <section class="grid grid-cols-3 gap-2 sm:gap-4">
         <!-- Dominio Promedio -->
-        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-4 shadow-sm">
-          <span class="text-[10px] font-semibold text-base-texto-secundario uppercase block">Dominio Promedio</span>
+        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-3 sm:p-4 shadow-sm min-w-0">
+          <span class="text-[10px] font-semibold text-base-texto-secundario block">Dominio en lo trabajado</span>
           <div class="flex items-baseline gap-1 mt-1">
-            <span class="text-2xl font-bold font-mono" :class="dashboard.summary.avgMastery >= 60 ? 'text-semantico-pasa' : 'text-semantico-falla'">
+            <span class="text-xl sm:text-2xl font-bold" :class="dashboard.summary.avgMastery >= 60 ? 'text-semantico-pasa' : 'text-semantico-falla'">
               {{ dashboard.summary.avgMastery }}%
             </span>
           </div>
-          <p class="text-[10px] text-base-texto-secundario mt-1">En todas las unidades</p>
+          <p class="text-[10px] text-base-texto-secundario mt-1">Solo las lecciones que ya practicó</p>
         </div>
 
         <!-- Tasa de Éxito -->
-        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-4 shadow-sm">
-          <span class="text-[10px] font-semibold text-base-texto-secundario uppercase block">Tasa de Aprobación</span>
+        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-3 sm:p-4 shadow-sm min-w-0">
+          <span class="text-[10px] font-semibold text-base-texto-secundario block">Ejercicios aprobados</span>
           <div class="flex items-baseline gap-1 mt-1">
-            <span class="text-2xl font-bold font-mono text-base-texto-primario">
+            <span class="text-xl sm:text-2xl font-bold text-base-texto-primario">
               {{ dashboard.summary.avgSuccessRate }}%
             </span>
           </div>
           <p class="text-[10px] text-base-texto-secundario mt-1">{{ plural(dashboard.summary.totalAttempts, 'intento', 'intentos') }} en total</p>
         </div>
 
-        <!-- Racha Real -->
-        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-4 shadow-sm">
-          <span class="text-[10px] font-semibold text-base-texto-secundario uppercase block">Racha Activa</span>
-          <div class="flex items-baseline gap-1 mt-1">
-            <span class="text-2xl font-bold font-mono text-acento-ambar-fuerte">
-              {{ dashboard.summary.streakDays }}
-            </span>
-            <span class="text-[11px] text-base-texto-secundario">{{ dashboard.summary.streakDays === 1 ? 'día seguido' : 'días seguidos' }}</span>
-          </div>
-          <p class="text-[10px] text-base-texto-secundario mt-1">Práctica continuada</p>
-        </div>
-
         <!-- Repasos Pendientes -->
-        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-4 shadow-sm">
-          <span class="text-[10px] font-semibold text-base-texto-secundario uppercase block">Repasos SM-2</span>
+        <div class="bg-base-blanco rounded-xl border border-base-borde-sutil p-3 sm:p-4 shadow-sm min-w-0">
+          <span class="text-[10px] font-semibold text-base-texto-secundario block">Repasos</span>
           <div class="flex items-baseline gap-1 mt-1">
-            <span class="text-2xl font-bold font-mono" :class="dashboard.summary.reviewStats.pending > 0 ? 'text-acento-ambar-fuerte' : 'text-semantico-pasa'">
+            <span class="text-xl sm:text-2xl font-bold" :class="dashboard.summary.reviewStats.pending > 0 ? 'text-acento-ambar-fuerte' : 'text-semantico-pasa'">
               {{ dashboard.summary.reviewStats.pending }}
             </span>
             <span class="text-[11px] text-base-texto-secundario">pendientes</span>
@@ -109,13 +110,17 @@
       </section>
 
       <!-- Dominio por Unidad de Aprendizaje -->
+      <!-- Las mismas estadísticas que ve el estudiante (docs/DISENO_INTERVENCION_DOCENTE.md §10.3) -->
+      <!-- Racha y semana a la vista; lo demás plegado (BT-21). La racha ya cuenta los días en hora de Colombia. -->
+      <EstadisticasEstudiante :student-id="Number(route.params.studentId)" :class-id="claseDeLaFicha" vista="docente" />
+
       <section class="bg-base-blanco rounded-xl border border-base-borde-sutil p-5 shadow-sm space-y-4">
         <h2 class="text-xs font-bold text-base-texto-primario uppercase tracking-wider">
-          Dominio Conceptual por Unidad de Aprendizaje
+          Dominio por lección
         </h2>
 
         <div v-if="dashboard.masteryByUnit.length === 0" class="text-xs text-base-texto-secundario italic py-4">
-          Sin registros de progreso en unidades aún.
+          Todavía no ha practicado ninguna lección.
         </div>
 
         <div v-else class="space-y-3">
@@ -158,8 +163,8 @@
             <thead class="bg-base-bg-secundario text-base-texto-secundario border-b border-base-borde-sutil font-semibold">
               <tr>
                 <th class="p-2.5">Actividad</th>
-                <th class="p-2.5">Fecha y Hora</th>
-                <th class="p-2.5 text-center">Estado</th>
+                <th class="p-2.5 hidden sm:table-cell">Fecha</th>
+                <th class="p-2.5 text-center hidden sm:table-cell">Estado</th>
                 <th class="p-2.5 text-right">Puntaje</th>
               </tr>
             </thead>
@@ -168,10 +173,10 @@
                 <td class="p-2.5 font-semibold text-base-texto-primario">
                   {{ sub.activityTitle }}
                 </td>
-                <td class="p-2.5 text-[11px] text-base-texto-secundario">
+                <td class="p-2.5 text-[11px] text-base-texto-secundario hidden sm:table-cell">
                   {{ new Date(sub.createdAt).toLocaleString() }}
                 </td>
-                <td class="p-2.5 text-center">
+                <td class="p-2.5 text-center hidden sm:table-cell">
                   <span
                     class="px-2 py-0.5 rounded text-[10px] font-bold"
                     :class="sub.status === 'graded' ? 'bg-semantico-pasa/15 text-semantico-pasa' : 'bg-acento-ambar/15 text-acento-ambar-fuerte'">
@@ -179,7 +184,7 @@
                   </span>
                 </td>
                 <td
-                  class="p-2.5 text-right font-mono font-bold"
+                  class="p-2.5 text-right font-bold"
                   :class="sub.passed === true ? 'text-semantico-pasa' : sub.passed === false ? 'text-semantico-falla' : 'text-base-texto-secundario'">
                   <template v-if="sub.status === 'graded'">{{ sub.score }} / {{ sub.maxScore ?? '—' }}</template>
                   <template v-else>—</template>
@@ -194,7 +199,9 @@
 </template>
 
 <script setup lang="ts">
+import { LifeBuoy, Mail, Rocket } from 'lucide-vue-next'
 import { useApi } from '~/composables/useApi'
+import { enlaceNuevoRefuerzo } from '~/utils/refuerzos'
 const { messageOf } = useApiErrorMessage()
 
 definePageMeta({
@@ -245,6 +252,9 @@ interface StudentDashboardData {
 }
 
 const route = useRoute()
+// Clase desde la que se abrió la ficha (Rendimiento o el mapa de calor): las estadísticas de lecciones son de esa clase.
+const claseDeLaFicha = computed(() => Number(route.query.clase) || null)
+const volverAlGrupo = computed(() => (claseDeLaFicha.value ? `/docente/rendimiento?classId=${claseDeLaFicha.value}` : '/docente/rendimiento'))
 const api = useApi()
 
 const dashboard = ref<StudentDashboardData | null>(null)

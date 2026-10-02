@@ -21,12 +21,17 @@
             <button
               @click="openCreateForm"
               class="px-3 py-1.5 rounded-md bg-acento-ambar-fuerte text-base-blanco font-bold text-xs hover:bg-acento-ambar inline-flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte">
-              <Plus :size="14" aria-hidden="true" /> Nueva lección
+              <Plus :size="14" aria-hidden="true" /> Nueva explicación
+            </button>
+            <button
+              @click="abrirRecurso(null)"
+              class="px-3 py-1.5 rounded-md borde-afordancia bg-base-blanco text-acento-ambar-fuerte font-bold text-xs hover:bg-acento-ambar/10 inline-flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte">
+              <ImagePlus :size="14" aria-hidden="true" /> Recurso
             </button>
             <button
               @click="handleClose"
               class="p-1.5 rounded text-base-texto-secundario hover:text-base-texto-primario hover:bg-base-bg-secundario focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
-              aria-label="Cerrar lecciones">
+              aria-label="Cerrar la explicación">
               <X :size="18" aria-hidden="true" />
             </button>
           </div>
@@ -40,13 +45,13 @@
         </div>
 
         <div class="p-5 overflow-y-auto space-y-3 flex-1 text-xs">
-          <p v-if="isLoading" class="p-8 text-center text-base-texto-secundario animate-pulse">Cargando lecciones…</p>
+          <p v-if="isLoading" class="p-8 text-center text-base-texto-secundario animate-pulse">Cargando la explicación…</p>
 
           <div v-else-if="lessons.length === 0" class="p-8 text-center bg-base-bg-secundario rounded-xl border border-base-borde-sutil space-y-2">
             <FileText :size="28" class="mx-auto text-base-texto-secundario" aria-hidden="true" />
-            <p class="font-semibold text-base-texto-primario">Esta unidad todavía no tiene lecciones</p>
+            <p class="font-semibold text-base-texto-primario">Esta lección todavía no tiene explicación</p>
             <p class="text-base-texto-secundario max-w-sm mx-auto text-[11px]">
-              Una lección corta (la idea, un ejemplo y un error común) prepara al estudiante antes de los ejercicios.
+              Una explicación corta (la idea, un ejemplo y un error común) prepara al estudiante antes de los ejercicios.
             </p>
           </div>
 
@@ -54,24 +59,28 @@
             <li
               v-for="(item, idx) in sortedLessons"
               :key="item.id"
-              class="p-3 rounded-lg border border-base-borde-sutil flex items-center justify-between gap-3 hover:border-base-borde-fuerte transition-colors">
+              class="p-3 rounded-lg border border-base-borde-sutil hover:border-base-borde-fuerte transition-colors space-y-3">
+              <div class="flex items-center justify-between gap-3">
               <button type="button" @click="openEditForm(item)" class="flex-1 min-w-0 text-left rounded focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte">
                 <span class="flex items-center gap-2">
                   <span class="font-bold text-base-texto-primario truncate">{{ item.title }}</span>
                   <span v-if="item.isVisible === false" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-base-texto-secundario/20 text-base-texto-secundario">Oculta</span>
                 </span>
-                <span v-if="item.body" class="block text-base-texto-secundario text-[11px] truncate mt-0.5">{{ excerpt(item.body) }}</span>
+                <span v-if="esRecurso(item.type)" class="block text-base-texto-secundario text-[11px] truncate mt-0.5">
+                  {{ item.type === 'image' ? 'Imagen' : (NOMBRE_PROVEEDOR[String(item.metadata?.provider)] ?? 'Recurso') }}
+                </span>
+                <span v-else-if="item.body" class="block text-base-texto-secundario text-[11px] truncate mt-0.5">{{ excerpt(item.body) }}</span>
               </button>
 
               <div class="flex items-center gap-0.5 shrink-0">
                 <button :disabled="idx === 0 || isReordering" @click="moveLesson(idx, -1)"
                   class="p-1.5 rounded text-base-texto-secundario hover:text-base-texto-primario hover:bg-base-bg-secundario disabled:opacity-30 disabled:pointer-events-none"
-                  aria-label="Subir lección" title="Subir">
+                  aria-label="Subir explicación" title="Subir">
                   <ChevronUp :size="16" aria-hidden="true" />
                 </button>
                 <button :disabled="idx === sortedLessons.length - 1 || isReordering" @click="moveLesson(idx, 1)"
                   class="p-1.5 rounded text-base-texto-secundario hover:text-base-texto-primario hover:bg-base-bg-secundario disabled:opacity-30 disabled:pointer-events-none"
-                  aria-label="Bajar lección" title="Bajar">
+                  aria-label="Bajar explicación" title="Bajar">
                   <ChevronDown :size="16" aria-hidden="true" />
                 </button>
                 <button :disabled="togglingId === item.id" @click="toggleLessonVisibility(item)"
@@ -80,6 +89,12 @@
                   :title="item.isVisible !== false ? 'Ocultar a los estudiantes' : 'Mostrar a los estudiantes'">
                   <Eye v-if="item.isVisible !== false" :size="16" aria-hidden="true" />
                   <EyeOff v-else :size="16" aria-hidden="true" />
+                </button>
+                <button v-if="esRecurso(item.type)" @click="vistaPreviaId = vistaPreviaId === item.id ? null : item.id"
+                  :aria-expanded="vistaPreviaId === item.id"
+                  class="p-1.5 rounded text-base-texto-secundario hover:text-base-texto-primario hover:bg-base-bg-secundario focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
+                  :aria-label="`Vista previa de ${item.title}`" title="Vista previa">
+                  <ScanEye :size="16" aria-hidden="true" />
                 </button>
                 <button @click="openEditForm(item)"
                   class="p-1.5 rounded text-base-texto-secundario hover:text-base-texto-primario hover:bg-base-bg-secundario focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
@@ -92,11 +107,13 @@
                   <Trash2 :size="16" aria-hidden="true" />
                 </button>
               </div>
+              </div>
+              <LessonResource v-if="vistaPreviaId === item.id" :type="item.type" :title="item.title" :metadata="item.metadata" />
             </li>
           </ul>
 
           <div v-if="lessonToDelete" class="p-4 rounded-xl border border-semantico-falla/30 bg-semantico-falla/5 space-y-3">
-            <p class="font-bold text-semantico-falla">¿Eliminar la lección «{{ lessonToDelete.title }}»?</p>
+            <p class="font-bold text-semantico-falla">¿Eliminar la explicación «{{ lessonToDelete.title }}»?</p>
             <p class="text-base-texto-secundario text-[11px]">No se puede deshacer. Si solo quieres que los estudiantes no la vean, usa el ojo para ocultarla.</p>
             <div class="flex items-center justify-end gap-2">
               <button type="button" @click="lessonToDelete = null" class="px-3 py-1.5 rounded-md borde-afordancia text-xs font-semibold bg-base-blanco">Cancelar</button>
@@ -118,14 +135,25 @@
     :is-editing="formState.isEditing"
     :initial-title="formState.title"
     :initial-body="formState.body"
+    :initial-insertados="formState.insertados"
     :saving="isSaving"
     :error="formError"
     @cancel="cancelForm"
     @save="onEditorSave" />
+
+  <DocenteResourceForm
+    v-if="recursoForm.open && unit"
+    :unit-id="unit.id"
+    :order="recursoForm.order"
+    :recurso="recursoForm.recurso"
+    @cancel="recursoForm.open = false"
+    @saved="onRecursoGuardado" />
 </template>
 
 <script setup lang="ts">
-import { Plus, X, FileText, ChevronUp, ChevronDown, Eye, EyeOff, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, X, FileText, ChevronUp, ChevronDown, Eye, EyeOff, Pencil, Trash2, ImagePlus, ScanEye } from 'lucide-vue-next'
+import { NOMBRE_PROVEEDOR } from '~/utils/recursoSeguro'
+import { insertadosDe, type Insertados } from '~/utils/contenidoLeccion'
 import { useApi } from '~/composables/useApi'
 
 interface LessonItem {
@@ -134,9 +162,15 @@ interface LessonItem {
   title: string
   type: string
   body: string
+  metadata?: Record<string, unknown> | null
   order: number
   isVisible: boolean
 }
+
+/** Video, PDF, imagen o recurso insertado (paso 6): se editan con su propio formulario, no con el editor de texto. */
+const esRecurso = (type: string) => ['video', 'pdf', 'image', 'embed'].includes(type)
+const vistaPreviaId = ref<number | null>(null)
+const recursoForm = reactive({ open: false, order: 0, recurso: null as LessonItem | null })
 
 const props = defineProps<{
   unit: { id: number; title: string } | null
@@ -158,7 +192,7 @@ const errorMsg = ref<string | null>(null)
 const showForm = ref(false)
 const isSaving = ref(false)
 const formError = ref<string | null>(null)
-const formState = reactive({ isEditing: false, id: 0, title: '', body: '', order: 0 })
+const formState = reactive({ isEditing: false, id: 0, title: '', body: '', order: 0, insertados: null as Insertados | null })
 
 const togglingId = ref<number | null>(null)
 const isReordering = ref(false)
@@ -197,7 +231,8 @@ async function openModal(opts: { create?: boolean; editId?: number } = {}) {
 useEscapeToClose(
   () => isOpen.value,
   () => {
-    if (showForm.value) cancelForm()
+    if (recursoForm.open) recursoForm.open = false
+    else if (showForm.value) cancelForm()
     else if (lessonToDelete.value) lessonToDelete.value = null
     else handleClose()
   }
@@ -216,7 +251,7 @@ async function fetchLessons() {
     const res = await api.get<LessonItem[]>(`/content/unit/${props.unit.id}/all`)
     lessons.value = Array.isArray(res) ? res : []
   } catch (err) {
-    errorMsg.value = messageOf(err, 'No se pudieron cargar las lecciones de la unidad.')
+    errorMsg.value = messageOf(err, 'No se pudo cargar la explicación de la lección.')
   } finally {
     isLoading.value = false
   }
@@ -224,13 +259,30 @@ async function fetchLessons() {
 
 function openCreateForm() {
   const maxOrder = lessons.value.reduce((max, l) => Math.max(max, l.order ?? 0), 0)
-  Object.assign(formState, { isEditing: false, id: 0, title: '', body: '', order: maxOrder + 1 })
+  Object.assign(formState, { isEditing: false, id: 0, title: '', body: '', order: maxOrder + 1, insertados: null })
   formError.value = null
   showForm.value = true
 }
 
+function abrirRecurso(recurso: LessonItem | null) {
+  const maxOrder = lessons.value.reduce((max, l) => Math.max(max, l.order ?? 0), 0)
+  Object.assign(recursoForm, { open: true, order: recurso?.order ?? maxOrder + 1, recurso })
+}
+
+function onRecursoGuardado(guardado: Pick<LessonItem, 'id' | 'title' | 'type' | 'metadata' | 'order'>, creado: boolean) {
+  const previo = lessons.value.find((l) => l.id === guardado.id)
+  const recurso: LessonItem = { learningUnitId: props.unit?.id ?? 0, body: '', isVisible: previo?.isVisible ?? true, ...previo, ...guardado }
+  const idx = lessons.value.findIndex((l) => l.id === recurso.id)
+  if (idx === -1) lessons.value.push(recurso)
+  else lessons.value[idx] = recurso
+  feedbackMsg.value = creado ? `Recurso «${recurso.title}» agregado. Ya lo ven tus estudiantes.` : `Recurso «${recurso.title}» guardado.`
+  recursoForm.open = false
+  vistaPreviaId.value = recurso.id
+}
+
 function openEditForm(lesson: LessonItem) {
-  Object.assign(formState, { isEditing: true, id: lesson.id, title: lesson.title, body: lesson.body || '', order: lesson.order })
+  if (esRecurso(lesson.type)) { abrirRecurso(lesson); return }
+  Object.assign(formState, { isEditing: true, id: lesson.id, title: lesson.title, body: lesson.body || '', order: lesson.order, insertados: insertadosDe(lesson.metadata) })
   formError.value = null
   showForm.value = true
 }
@@ -242,8 +294,8 @@ function cancelForm() {
 
 async function onEditorSave(payload: { title: string; body: string }) {
   if (!props.unit) return
-  if (!payload.title) { formError.value = 'Ponle un título a la lección.'; return }
-  if (!payload.body) { formError.value = 'La lección está vacía.'; return }
+  if (!payload.title) { formError.value = 'Ponle un título a la explicación.'; return }
+  if (!payload.body) { formError.value = 'La explicación está vacía.'; return }
   isSaving.value = true
   formError.value = null
   try {
@@ -266,7 +318,7 @@ async function onEditorSave(payload: { title: string; body: string }) {
     }
     showForm.value = false
   } catch (err) {
-    formError.value = messageOf(err, 'No se pudo guardar la lección.')
+    formError.value = messageOf(err, 'No se pudo guardar la explicación.')
   } finally {
     isSaving.value = false
   }
@@ -280,7 +332,7 @@ async function toggleLessonVisibility(lesson: LessonItem) {
     lesson.isVisible = res.isVisible
     feedbackMsg.value = lesson.isVisible ? `«${lesson.title}» ya es visible.` : `«${lesson.title}» quedó oculta para los estudiantes.`
   } catch (err) {
-    errorMsg.value = messageOf(err, 'No se pudo cambiar la visibilidad de la lección.')
+    errorMsg.value = messageOf(err, 'No se pudo cambiar la visibilidad de la explicación.')
   } finally {
     togglingId.value = null
   }
@@ -302,7 +354,7 @@ async function moveLesson(index: number, direction: -1 | 1) {
       if (found) found.order = r.order
     }
   } catch (err) {
-    errorMsg.value = messageOf(err, 'No se pudo cambiar el orden de las lecciones.')
+    errorMsg.value = messageOf(err, 'No se pudo cambiar el orden de las explicaciones.')
     await fetchLessons()
   } finally {
     isReordering.value = false
@@ -323,7 +375,7 @@ async function executeDelete() {
     feedbackMsg.value = `Lección «${lessonToDelete.value.title}» eliminada.`
     lessonToDelete.value = null
   } catch (err) {
-    errorMsg.value = messageOf(err, 'No se pudo eliminar la lección.')
+    errorMsg.value = messageOf(err, 'No se pudo eliminar la explicación.')
   } finally {
     isDeleting.value = false
   }
