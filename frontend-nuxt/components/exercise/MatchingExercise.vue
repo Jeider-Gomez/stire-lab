@@ -13,28 +13,38 @@
     <!-- Filas de emparejamiento -->
     <div class="space-y-3">
       <div
-        v-for="leftItem in leftColumn"
+        v-for="(leftItem, idx) in leftColumn"
         :key="leftItem.id"
-        class="p-3 rounded-lg border border-base-borde-sutil bg-base-blanco flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs transition-all hover:border-acento-ambar/50"
+        class="p-3 rounded-lg border bg-base-blanco flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs transition-all duration-200 anim-subir"
+        :style="{ '--stagger': idx + 1 }"
+        :class="pairs[leftItem.id]
+          ? 'border-acento-ambar-fuerte/70 bg-acento-ambar/5 shadow-sm'
+          : 'border-base-borde-sutil hover:border-acento-ambar-fuerte/40 hover:bg-base-bg-primario/40'"
       >
         <!-- Elemento de la izquierda -->
         <div class="flex items-center gap-2 flex-1">
-          <span class="w-2 h-2 rounded-full bg-acento-ambar-fuerte flex-shrink-0"></span>
-          <span class="text-xs text-base-texto-primario font-mono bg-base-bg-secundario px-2.5 py-1.5 rounded border border-base-borde-sutil flex-1">
+          <span
+            class="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-transform duration-200"
+            :class="pairs[leftItem.id] ? 'bg-acento-ambar-fuerte scale-125' : 'bg-base-borde-fuerte'"></span>
+          <span class="text-xs text-base-texto-primario font-mono bg-base-bg-secundario px-2.5 py-1.5 rounded border border-base-borde-sutil flex-1 transition-colors">
             {{ itemText(leftItem) }}
           </span>
         </div>
 
-        <!-- Flecha o separador -->
-        <span class="text-base-texto-secundario hidden sm:inline text-xs font-bold">➔</span>
+        <!-- Flecha o separador con microtransición -->
+        <span
+          class="hidden sm:inline text-xs font-bold transition-colors duration-200"
+          :class="pairs[leftItem.id] ? 'text-acento-ambar-fuerte scale-110' : 'text-base-texto-secundario'">
+          ➔
+        </span>
 
         <!-- Selector de la columna derecha -->
         <div class="flex-1 sm:max-w-xs">
           <select
             :id="`matching-select-${leftItem.id}`"
             v-model="pairs[leftItem.id]"
-            class="w-full text-xs bg-base-blanco text-base-texto-primario border border-base-borde-sutil rounded px-2.5 py-1.5 focus:border-acento-ambar-fuerte focus:outline-none focus:ring-1 focus:ring-acento-ambar-fuerte transition-colors"
-            :class="pairs[leftItem.id] ? 'border-acento-ambar-fuerte text-acento-ambar-fuerte font-semibold' : 'text-base-texto-secundario'"
+            class="w-full text-xs bg-base-blanco text-base-texto-primario border rounded px-2.5 py-1.5 focus:border-acento-ambar-fuerte focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte transition-all duration-150"
+            :class="pairs[leftItem.id] ? 'border-acento-ambar-fuerte text-acento-ambar-fuerte font-semibold bg-acento-ambar/5' : 'border-base-borde-sutil text-base-texto-secundario hover:border-base-borde-fuerte'"
           >
             <option value="" disabled>-- Selecciona coincidencia --</option>
             <option

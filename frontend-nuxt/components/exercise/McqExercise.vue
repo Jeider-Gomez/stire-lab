@@ -1,19 +1,20 @@
 <template>
   <div class="space-y-5">
     <!-- Enunciado de la pregunta -->
-    <div v-if="showStatement" class="prose prose-xs text-base-texto-primario">
+    <div v-if="showStatement" class="prose prose-xs text-base-texto-primario anim-subir" style="--stagger: 0">
       <p class="text-xs leading-relaxed whitespace-pre-wrap">{{ question.question }}</p>
     </div>
 
     <!-- Opciones de selección única (radio) -->
     <div class="space-y-3">
       <label
-        v-for="option in options"
+        v-for="(option, idx) in options"
         :key="option.id"
         :for="`mcq-opt-${option.id}`"
-        class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all duration-150 select-none"
+        class="opcion-tocar flex items-start gap-3 p-3 rounded-lg border cursor-pointer select-none anim-subir"
+        :style="{ '--stagger': idx + 1 }"
         :class="selectedId === option.id
-          ? 'border-acento-ambar-fuerte bg-acento-ambar/10 shadow-sm'
+          ? 'border-acento-ambar-fuerte bg-acento-ambar/10 shadow-sm ring-1 ring-acento-ambar-fuerte/30'
           : 'border-base-borde-sutil bg-base-blanco hover:border-acento-ambar/50 hover:bg-base-bg-secundario'"
       >
         <input
@@ -21,18 +22,20 @@
           type="radio"
           :value="option.id"
           v-model="selectedId"
-          class="mt-0.5 accent-acento-ambar-fuerte flex-shrink-0"
+          class="mt-0.5 accent-acento-ambar-fuerte flex-shrink-0 transition-transform duration-150"
         />
         <span class="text-xs text-base-texto-primario leading-relaxed">{{ option.text }}</span>
       </label>
     </div>
 
     <!-- Estado de selección -->
-    <div class="text-[11px] text-base-texto-secundario flex items-center gap-1.5 pt-1">
-      <span v-if="selectedId" class="text-semantico-pasa">✔ Opción seleccionada.</span>
-      <span v-else class="text-acento-ambar-fuerte">⚠ Selecciona una opción antes de entregar.</span>
-      <span v-if="selectedId"> Cuando estés seguro, pulsa <strong>Entregar respuesta</strong>.</span>
-    </div>
+    <Transition name="aviso-suave">
+      <div class="text-[11px] text-base-texto-secundario flex items-center gap-1.5 pt-1">
+        <span v-if="selectedId" class="text-semantico-pasa">✔ Opción seleccionada.</span>
+        <span v-else class="text-acento-ambar-fuerte">⚠ Selecciona una opción antes de entregar.</span>
+        <span v-if="selectedId"> Cuando estés seguro, pulsa <strong>Entregar respuesta</strong>.</span>
+      </div>
+    </Transition>
   </div>
 </template>
 

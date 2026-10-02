@@ -23,3 +23,23 @@ El backend (`src/`, Docker, despliegue) se eliminó del laboratorio el 2026-09-2
 
 | # | Fecha | Qué cambió (en palabras simples) | Archivos tocados (ruta completa) | ¿Listo para copiar? |
 |---|---|---|---|---|
+| 1 | 2026-09-30 | Animaciones y microinteracciones en la ruta del estudiante (entradas escalonadas, escala 0.98 al presionar, confirmación de respuestas, ventana de resultado con celebración o entrada tranquila, y barra de dominio animada con GPU scaleX). | frontend-nuxt/assets/css/main.css, frontend-nuxt/pages/estudiante/index.vue, frontend-nuxt/pages/estudiante/unidad/[id].vue, frontend-nuxt/pages/estudiante/evaluacion/[activityId].vue, frontend-nuxt/components/exercise/McqExercise.vue, frontend-nuxt/components/exercise/OrderingExercise.vue, frontend-nuxt/components/exercise/MatchingExercise.vue, frontend-nuxt/components/exercise/FillCodeExercise.vue, frontend-nuxt/components/exercise/DragDropExercise.vue, frontend-nuxt/components/exercise/HtmlCssExercise.vue | pendiente de revisión |
+
+## Sesión: ruta del estudiante
+
+### Archivos para COPIAR (cambios visuales del estudiante)
+
+- `frontend-nuxt/assets/css/main.css`: Clases y keyframes reutilizables para entradas suaves (subir 8px), escala al pulsar (0.98), celebración de éxito (máx. 0.75 s) y entrada tranquila de intentos calificados.
+- `frontend-nuxt/pages/estudiante/index.vue`: Entrada escalonada de tarjetas (50 ms), respuesta táctil en botones y llenado animado de la barra de dominio desde 0 % usando `transform: scaleX`.
+- `frontend-nuxt/pages/estudiante/unidad/[id].vue`: Entradas escalonadas, respuesta visual inmediata en las 3 opciones de confianza y animación suave en la lista de actividades.
+- `frontend-nuxt/pages/estudiante/evaluacion/[activityId].vue`: Microinteracciones en pestañas y botón de entrega; ventana modal de resultado con celebración si aprueba y entrada tranquila sin castigo si no aprueba.
+- `frontend-nuxt/components/exercise/McqExercise.vue`: Transición de confirmación visual (borde y anillo sutil) al seleccionar una opción de radio.
+- `frontend-nuxt/components/exercise/OrderingExercise.vue`: Reordenamiento animado con `<TransitionGroup>` (`list-reorder`) al presionar ⬆ y ⬇, con escala táctil en botones.
+- `frontend-nuxt/components/exercise/MatchingExercise.vue`: Transición de confirmación visual en la fila e indicador cuando se completa cada emparejamiento.
+- `frontend-nuxt/components/exercise/FillCodeExercise.vue`: Microinteracción de foco y escalado sutil en los campos editables dentro de la plantilla de código.
+- `frontend-nuxt/components/exercise/DragDropExercise.vue`: Transiciones fluidas con `<TransitionGroup>` al mover chips entre la bandeja y las categorías de destino.
+- `frontend-nuxt/components/exercise/HtmlCssExercise.vue`: Microinteracciones de pulsación y foco en las pestañas HTML/CSS y en los botones «Probar» y «Entregar solución».
+
+### Archivos NO COPIAR de esta sesión
+
+- Ninguno. Todos los archivos modificados en esta sesión pertenecen a la capa visual estándar (`pages/`, `components/`, `assets/`) y pueden ser copiados al proyecto real previa revisión.

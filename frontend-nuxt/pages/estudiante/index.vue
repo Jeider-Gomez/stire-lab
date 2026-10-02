@@ -1,7 +1,9 @@
 <template>
   <div class="space-y-6">
     <!-- BARRA SUPERIOR: Contexto de Asignatura y Selector de Clases -->
-    <div class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div
+      class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 anim-subir"
+      style="--stagger: 0">
       <div class="flex items-center gap-2">
         <span class="text-lg">🏛️</span>
         <div>
@@ -20,7 +22,7 @@
       <div class="flex items-center gap-2 self-start sm:self-auto">
         <NuxtLink
           to="/estudiante/clases"
-          class="borde-afordancia px-3 py-1.5 rounded-md text-xs font-semibold text-base-texto-primario bg-base-blanco hover:bg-base-bg-secundario transition-colors flex items-center gap-1.5 shadow-sm">
+          class="borde-afordancia px-3 py-1.5 rounded-md text-xs font-semibold text-base-texto-primario bg-base-blanco hover:bg-base-bg-secundario transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 shadow-sm">
           <span>📚</span>
           <span>Mis Clases ({{ studentStore.enrolledClasses.length }})</span>
         </NuxtLink>
@@ -28,41 +30,47 @@
     </div>
 
     <!-- Aviso discreto de solicitud de rol docente (§23 T4) -->
-    <div
-      v-if="myRoleRequest"
-      class="p-3 rounded-lg border text-xs flex items-center justify-between gap-3 shadow-sm"
-      :class="{
-        'bg-semantico-info/10 border-semantico-info/30 text-semantico-info': myRoleRequest.status === 'pending',
-        'bg-semantico-pasa/10 border-semantico-pasa/30 text-semantico-pasa': myRoleRequest.status === 'approved',
-        'bg-semantico-falla/10 border-semantico-falla/30 text-semantico-falla': myRoleRequest.status === 'rejected'
-      }">
-      <div class="flex items-center gap-2">
-        <span v-if="myRoleRequest.status === 'pending'">⏳</span>
-        <span v-else-if="myRoleRequest.status === 'approved'">🎉</span>
-        <span v-else>⚠️</span>
+    <Transition name="aviso-suave">
+      <div
+        v-if="myRoleRequest"
+        class="p-3 rounded-lg border text-xs flex items-center justify-between gap-3 shadow-sm anim-subir"
+        style="--stagger: 1"
+        :class="{
+          'bg-semantico-info/10 border-semantico-info/30 text-semantico-info': myRoleRequest.status === 'pending',
+          'bg-semantico-pasa/10 border-semantico-pasa/30 text-semantico-pasa': myRoleRequest.status === 'approved',
+          'bg-semantico-falla/10 border-semantico-falla/30 text-semantico-falla': myRoleRequest.status === 'rejected'
+        }">
+        <div class="flex items-center gap-2">
+          <span v-if="myRoleRequest.status === 'pending'">⏳</span>
+          <span v-else-if="myRoleRequest.status === 'approved'">🎉</span>
+          <span v-else>⚠️</span>
 
-        <span v-if="myRoleRequest.status === 'pending'" class="font-medium">
-          Tu solicitud para ser docente está pendiente
-        </span>
-        <span v-else-if="myRoleRequest.status === 'approved'" class="font-medium">
-          Aprobada: cierra sesión y vuelve a entrar para usar el rol docente
-        </span>
-        <span v-else class="font-medium">
-          Tu solicitud para ser docente fue rechazada<span v-if="myRoleRequest.reviewNote">: «{{ myRoleRequest.reviewNote }}»</span>
-        </span>
+          <span v-if="myRoleRequest.status === 'pending'" class="font-medium">
+            Tu solicitud para ser docente está pendiente
+          </span>
+          <span v-else-if="myRoleRequest.status === 'approved'" class="font-medium">
+            Aprobada: cierra sesión y vuelve a entrar para usar el rol docente
+          </span>
+          <span v-else class="font-medium">
+            Tu solicitud para ser docente fue rechazada<span v-if="myRoleRequest.reviewNote">: «{{ myRoleRequest.reviewNote }}»</span>
+          </span>
+        </div>
+
+        <button
+          v-if="myRoleRequest.status === 'approved'"
+          type="button"
+          @click="authStore.logout()"
+          class="text-xs underline font-bold hover:opacity-80 active:scale-95 transition-all">
+          Cerrar sesión
+        </button>
       </div>
-
-      <button
-        v-if="myRoleRequest.status === 'approved'"
-        type="button"
-        @click="authStore.logout()"
-        class="text-xs underline font-bold hover:opacity-80">
-        Cerrar sesión
-      </button>
-    </div>
+    </Transition>
 
     <!-- ESTADO VACÍO SI NO ESTÁ MATRICULADO -->
-    <section v-if="!studentStore.isSyncing && studentStore.enrolledClasses.length === 0" class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-8 text-center space-y-4 shadow-sm">
+    <section
+      v-if="!studentStore.isSyncing && studentStore.enrolledClasses.length === 0"
+      class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-8 text-center space-y-4 shadow-sm anim-subir"
+      style="--stagger: 1">
       <div class="w-16 h-16 bg-acento-ambar/15 text-acento-ambar-fuerte rounded-full flex items-center justify-center text-3xl mx-auto">
         🎓
       </div>
@@ -74,7 +82,7 @@
       </div>
       <NuxtLink
         to="/estudiante/clases"
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs transition-colors shadow-sm">
+        class="boton-tocar inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs shadow-sm">
         <span>🔑</span>
         <span>Ingresar Código de Clase</span>
       </NuxtLink>
@@ -82,7 +90,10 @@
 
     <template v-else>
       <!-- 1. TARJETA HERO DE ACCIÓN INMEDIATA (P01 — Orientación y Jerarquía) -->
-      <section v-if="studentStore.activeUnit" class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <section
+        v-if="studentStore.activeUnit"
+        class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 anim-subir"
+        style="--stagger: 1">
         <div class="space-y-2 max-w-2xl">
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-acento-ambar/15 text-acento-ambar-fuerte uppercase tracking-wider">
@@ -101,12 +112,12 @@
             {{ studentStore.activeUnit.description }}
           </p>
 
-          <!-- Barra de Progreso de la Unidad -->
+          <!-- Barra de Progreso de la Unidad: llenado animado desde 0 al aparecer usando transform: scaleX -->
           <div class="flex items-center gap-3 pt-1">
             <div class="w-48 h-2 bg-base-bg-secundario rounded-full overflow-hidden border border-base-borde-sutil">
               <div
-                class="h-full bg-acento-ambar-fuerte rounded-full transition-all duration-500"
-                :style="{ width: `${studentStore.activeUnit.masteryPercentage}%` }"></div>
+                class="h-full w-full bg-acento-ambar-fuerte rounded-full origin-left transition-transform duration-500 ease-out"
+                :style="{ transform: `scaleX(${progressLoaded ? (studentStore.activeUnit.masteryPercentage / 100) : 0})` }"></div>
             </div>
             <span class="text-xs font-semibold text-base-texto-primario">
               {{ studentStore.activeUnit.masteryPercentage }}% de Dominio
@@ -132,7 +143,7 @@
             />
             <NuxtLink
               :to="`/estudiante/evaluacion/${recommendedExerciseId}`"
-              class="px-5 py-3 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs text-center transition-colors shadow-sm flex items-center justify-center gap-2"
+              class="boton-tocar px-5 py-3 rounded-lg bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs text-center shadow-sm flex items-center justify-center gap-2"
             >
               <span>Continuar Ejercicio</span>
             </NuxtLink>
@@ -147,7 +158,7 @@
 
           <NuxtLink
             to="/estudiante/repasos"
-            class="borde-afordancia px-4 py-2.5 rounded-lg bg-base-bg-secundario text-center text-xs font-semibold text-base-texto-primario flex items-center justify-center gap-1.5">
+            class="borde-afordancia px-4 py-2.5 rounded-lg bg-base-bg-secundario text-center text-xs font-semibold text-base-texto-primario flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-[0.98] hover:shadow-xs">
             <span>🧠</span>
             <span>Repasar conceptos ({{ studentStore.reviews.length }})</span>
           </NuxtLink>
@@ -156,26 +167,34 @@
 
       <!-- 2. MÉTRICAS RÁPIDAS DE ESTADO -->
       <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm">
+        <div
+          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
+          style="--stagger: 2">
           <p class="text-[11px] text-base-texto-secundario font-medium">Dominio</p>
           <p class="text-xl font-bold mt-1" :class="studentStore.analytics.avgMastery >= 70 ? 'text-semantico-pasa' : studentStore.analytics.avgMastery >= 40 ? 'text-acento-ambar-fuerte' : 'text-base-texto-primario'">{{ studentStore.analytics.avgMastery }}%</p>
           <!-- Antes decía «Supera umbral de 70%» siempre, también con 0 %. -->
           <span class="text-[10px] text-base-texto-secundario">{{ studentStore.analytics.avgMastery >= 70 ? 'Ya dominas lo que llevas' : 'La meta es llegar al 70 %' }}</span>
         </div>
 
-        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm">
+        <div
+          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
+          style="--stagger: 3">
           <p class="text-[11px] text-base-texto-secundario font-medium">Éxito en tus entregas</p>
           <p class="text-xl font-bold text-base-texto-primario mt-1">{{ studentStore.analytics.avgSuccessRate }}%</p>
           <span class="text-[10px] text-base-texto-secundario">De tus entregas</span>
         </div>
 
-        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm">
+        <div
+          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
+          style="--stagger: 4">
           <p class="text-[11px] text-base-texto-secundario font-medium">Racha de Aprendizaje</p>
           <p class="text-xl font-bold text-acento-ambar-fuerte mt-1">🔥 {{ plural(studentStore.analytics.streakDays, 'día', 'días') }}</p>
           <span class="text-[10px] text-base-texto-secundario">Constancia formativa</span>
         </div>
 
-        <div class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm">
+        <div
+          class="bg-base-blanco rounded-lg border border-base-borde-sutil p-4 shadow-sm tarjeta-hover active:scale-[0.98] anim-subir"
+          style="--stagger: 5">
           <p class="text-[11px] text-base-texto-secundario font-medium">Ejercicios Completados</p>
           <p class="text-xl font-bold text-semantico-info mt-1">{{ studentStore.analytics.completedExercises }}</p>
           <span class="text-[10px] text-base-texto-secundario">En el período activo</span>
@@ -184,7 +203,7 @@
 
       <!-- 3. PLAN CURRICULAR POR MÓDULOS -->
       <section class="space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between anim-subir" style="--stagger: 6">
           <h2 class="text-base font-bold text-base-texto-primario flex items-center gap-2">
             <span>🗺️</span> Plan Curricular de la Asignatura
           </h2>
@@ -193,15 +212,16 @@
           </span>
         </div>
 
-        <div v-if="studentStore.modules.length === 0" class="p-8 text-center bg-base-blanco rounded-xl border border-base-borde-sutil text-xs text-base-texto-secundario">
+        <div v-if="studentStore.modules.length === 0" class="p-8 text-center bg-base-blanco rounded-xl border border-base-borde-sutil text-xs text-base-texto-secundario anim-subir" style="--stagger: 7">
           No hay módulos publicados para esta asignatura en este momento.
         </div>
 
         <div v-else class="space-y-4">
           <div
-            v-for="mod in studentStore.modules"
+            v-for="(mod, modIdx) in studentStore.modules"
             :key="mod.id"
-            class="bg-base-blanco rounded-xl border border-base-borde-sutil overflow-hidden shadow-sm">
+            class="bg-base-blanco rounded-xl border border-base-borde-sutil overflow-hidden shadow-sm anim-subir hover:shadow-md transition-shadow duration-200"
+            :style="{ '--stagger': 7 + modIdx }">
             <!-- Cabecera del Módulo -->
             <div class="bg-base-bg-secundario/60 px-5 py-3 border-b border-base-borde-sutil flex items-center justify-between">
               <h3 class="font-bold text-xs text-base-texto-primario">
@@ -217,7 +237,7 @@
               <div
                 v-for="unit in mod.units"
                 :key="unit.id"
-                class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-base-bg-primario/50 transition-colors">
+                class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-base-bg-primario/60 transition-colors duration-150">
                 <div class="space-y-2 flex-1">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span
@@ -252,7 +272,7 @@
                       v-for="act in unit.activities"
                       :key="act.id"
                       :to="`/estudiante/evaluacion/${act.id}`"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-base-borde-fuerte bg-base-blanco hover:bg-acento-ambar/10 hover:border-acento-ambar-fuerte transition-colors">
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono border border-base-borde-fuerte bg-base-blanco hover:bg-acento-ambar/10 hover:border-acento-ambar-fuerte active:scale-[0.97] transition-all duration-150">
                       <span>{{ getActivityIcon(act.title) }}</span>
                       <span class="font-semibold">{{ act.title }}</span>
                       <span class="text-acento-ambar-fuerte font-bold">({{ Math.round((act.adaptiveWeight || 1) * 100) }}%)</span>
@@ -265,7 +285,7 @@
                   <NuxtLink
                     v-if="unit.exerciseActivityId"
                     :to="`/estudiante/evaluacion/${unit.exerciseActivityId}`"
-                    class="px-3.5 py-1.5 rounded-md text-xs font-semibold bg-acento-ambar-fuerte text-base-blanco hover:bg-acento-ambar shadow-sm transition-colors flex items-center gap-1">
+                    class="boton-tocar px-3.5 py-1.5 rounded-md text-xs font-semibold bg-acento-ambar-fuerte text-base-blanco hover:bg-acento-ambar shadow-sm flex items-center gap-1">
                     <span>▶</span>
                     <span>Practicar</span>
                   </NuxtLink>
@@ -319,9 +339,17 @@ async function fetchMyRoleRequest() {
   }
 }
 
+// Estado de animación de la barra de dominio
+const progressLoaded = ref(false)
+
 onMounted(() => {
   studentStore.fetchStudentData()
   fetchMyRoleRequest()
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      progressLoaded.value = true
+    }, 60)
+  })
 })
 
 // Ejercicio a recomendar en la tarjeta hero: usa el mismo motor de dominio

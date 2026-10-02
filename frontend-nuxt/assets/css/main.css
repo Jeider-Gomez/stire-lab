@@ -121,6 +121,113 @@
   .borde-afordancia-focus {
     @apply outline-none ring-2 ring-stire-blue ring-offset-2;
   }
+
+  /* Microinteracciones y transiciones de la ruta del estudiante (subir 8px, escala 0.98 al presionar) */
+  .anim-subir {
+    animation: stire-subir-suave 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--stagger, 0) * 50ms);
+  }
+
+  .boton-tocar {
+    @apply transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-ambar-fuerte;
+  }
+  .boton-tocar:not(:disabled):hover {
+    @apply shadow-md -translate-y-0.5;
+  }
+  .boton-tocar:not(:disabled):active {
+    transform: scale(0.98);
+  }
+
+  .opcion-tocar {
+    @apply transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acento-ambar-fuerte;
+  }
+  .opcion-tocar:not(:disabled):hover {
+    @apply shadow-sm border-acento-ambar/60;
+  }
+  .opcion-tocar:not(:disabled):active {
+    transform: scale(0.985);
+  }
+
+  .tarjeta-hover {
+    @apply transition-all duration-200 hover:shadow-md;
+  }
+
+  /* Celebración y confirmación tranquila de resultado de entrega (máx. 1.2s) */
+  .anim-celebracion {
+    animation: stire-celebracion 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .anim-tranquilo {
+    animation: stire-tranquilo 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* Transiciones Vue TransitionGroup y Transition */
+.list-reorder-move {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.list-reorder-enter-active,
+.list-reorder-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.list-reorder-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.list-reorder-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.modal-resultado-enter-active {
+  transition: opacity 0.22s ease;
+}
+.modal-resultado-leave-active {
+  transition: opacity 0.18s ease;
+}
+.modal-resultado-enter-from,
+.modal-resultado-leave-to {
+  opacity: 0;
+}
+.modal-resultado-enter-active .modal-tarjeta {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+}
+.modal-resultado-leave-active .modal-tarjeta {
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.modal-resultado-enter-from .modal-tarjeta {
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+}
+.modal-resultado-leave-to .modal-tarjeta {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+.aviso-suave-enter-active,
+.aviso-suave-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.aviso-suave-enter-from,
+.aviso-suave-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+@keyframes stire-subir-suave {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes stire-celebracion {
+  0% { opacity: 0; transform: scale(0.85) rotate(-6deg); }
+  50% { opacity: 1; transform: scale(1.12) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes stire-tranquilo {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes stire-entrada {

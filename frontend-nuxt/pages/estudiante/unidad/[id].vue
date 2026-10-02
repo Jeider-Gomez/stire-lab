@@ -25,7 +25,9 @@
 
     <template v-else>
       <!-- Cabecera de la Lección (EST-V02) -->
-      <header class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm">
+      <header
+        class="bg-base-blanco rounded-xl border border-base-borde-fuerte p-6 shadow-sm anim-subir"
+        style="--stagger: 0">
         <div class="flex items-center gap-2 mb-2">
           <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-semantico-info/10 text-semantico-info uppercase tracking-wider">
             Lección
@@ -43,7 +45,8 @@
       <!-- Cuerpo del Contenido: bloques REALES de la unidad, no una plantilla fija -->
       <article
         v-if="unitContent.length > 0"
-        class="bg-base-blanco rounded-xl border border-base-borde-sutil p-6 md:p-8 shadow-sm space-y-6 text-xs text-base-texto-primario leading-relaxed">
+        class="bg-base-blanco rounded-xl border border-base-borde-sutil p-6 md:p-8 shadow-sm space-y-6 text-xs text-base-texto-primario leading-relaxed anim-subir"
+        style="--stagger: 1">
         <section v-for="content in unitContent" :key="content.id" class="space-y-2">
           <h2 v-if="content.title" class="text-sm font-bold text-base-texto-primario">
             {{ content.title }}
@@ -51,62 +54,67 @@
           <div class="prose prose-xs space-y-3" v-html="formatMarkdown(content.body)" />
         </section>
       </article>
-      <article v-else class="bg-base-blanco rounded-xl border border-base-borde-sutil p-6 text-xs text-base-texto-secundario">
+      <article v-else class="bg-base-blanco rounded-xl border border-base-borde-sutil p-6 text-xs text-base-texto-secundario anim-subir" style="--stagger: 1">
         Esta unidad todavía no tiene material de lectura publicado. Pasa directamente al ejercicio práctico.
       </article>
 
       <!-- Tarjeta de Confianza Inicial (T1 — ¿Cómo te sientes con este tema?) -->
-      <section
-        v-if="showConfidenceCard"
-        class="bg-base-blanco rounded-xl border border-acento-ambar-fuerte/40 p-5 shadow-sm space-y-3"
-      >
-        <div>
-          <h2 id="confidence-title" class="text-sm font-bold text-base-texto-primario">
-            ¿Cómo te sientes con «{{ unitData.title }}»?
-          </h2>
-          <p class="text-[11px] text-base-texto-secundario mt-0.5">
-            Nos ayuda a proponerte por dónde empezar. Puedes saltarla.
-          </p>
-        </div>
-
-        <div
-          role="group"
-          aria-labelledby="confidence-title"
-          class="flex flex-wrap items-center gap-2.5 pt-1"
+      <Transition name="aviso-suave">
+        <section
+          v-if="showConfidenceCard"
+          class="bg-base-blanco rounded-xl border border-acento-ambar-fuerte/40 p-5 shadow-sm space-y-3 anim-subir hover:shadow-md transition-shadow duration-200"
+          style="--stagger: 2"
         >
-          <button
-            type="button"
-            :disabled="isSubmittingConfidence"
-            @click="submitConfidence(1)"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-base-borde-fuerte bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte transition-colors disabled:opacity-50"
-          >
-            Es nuevo para mí
-          </button>
-          <button
-            type="button"
-            :disabled="isSubmittingConfidence"
-            @click="submitConfidence(2)"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-base-borde-fuerte bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte transition-colors disabled:opacity-50"
-          >
-            Tengo dudas
-          </button>
-          <button
-            type="button"
-            :disabled="isSubmittingConfidence"
-            @click="submitConfidence(3)"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-base-borde-fuerte bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte transition-colors disabled:opacity-50"
-          >
-            Me siento seguro
-          </button>
-        </div>
+          <div>
+            <h2 id="confidence-title" class="text-sm font-bold text-base-texto-primario">
+              ¿Cómo te sientes con «{{ unitData.title }}»?
+            </h2>
+            <p class="text-[11px] text-base-texto-secundario mt-0.5">
+              Nos ayuda a proponerte por dónde empezar. Puedes saltarla.
+            </p>
+          </div>
 
-        <p v-if="confidenceError" role="alert" class="text-xs text-semantico-falla pt-1">
-          {{ confidenceError }}
-        </p>
-      </section>
+          <div
+            role="group"
+            aria-labelledby="confidence-title"
+            class="flex flex-wrap items-center gap-2.5 pt-1"
+          >
+            <button
+              type="button"
+              :disabled="isSubmittingConfidence"
+              @click="submitConfidence(1)"
+              class="opcion-tocar px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-base-borde-fuerte bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte disabled:opacity-50"
+            >
+              Es nuevo para mí
+            </button>
+            <button
+              type="button"
+              :disabled="isSubmittingConfidence"
+              @click="submitConfidence(2)"
+              class="opcion-tocar px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-base-borde-fuerte bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte disabled:opacity-50"
+            >
+              Tengo dudas
+            </button>
+            <button
+              type="button"
+              :disabled="isSubmittingConfidence"
+              @click="submitConfidence(3)"
+              class="opcion-tocar px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-base-borde-fuerte bg-base-blanco text-base-texto-primario hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte disabled:opacity-50"
+            >
+              Me siento seguro
+            </button>
+          </div>
+
+          <p v-if="confidenceError" role="alert" class="text-xs text-semantico-falla pt-1">
+            {{ confidenceError }}
+          </p>
+        </section>
+      </Transition>
 
       <!-- Botón de Navegación al Ejercicio Práctico -->
-      <section class="rounded-lg border border-acento-ambar-fuerte/30 bg-acento-ambar/10 p-4 space-y-3">
+      <section
+        class="rounded-lg border border-acento-ambar-fuerte/30 bg-acento-ambar/10 p-4 space-y-3 anim-subir hover:shadow-sm transition-shadow duration-200"
+        style="--stagger: 3">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-sm font-bold text-base-texto-primario">Tu siguiente paso</h2>
@@ -117,7 +125,7 @@
           <button
             v-if="recommendedActivity"
             type="button"
-            class="text-xs font-semibold text-acento-ambar-fuerte hover:underline"
+            class="text-xs font-semibold text-acento-ambar-fuerte hover:underline active:scale-[0.98] transition-transform duration-150"
             @click="toggleManualChoice">
             {{ chooseManually ? 'Usar recomendado para ti' : 'Elegir yo mismo' }}
           </button>
@@ -139,7 +147,7 @@
           />
           <NuxtLink
             :to="`/estudiante/evaluacion/${recommendedActivity.activityId}`"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs transition-colors"
+            class="boton-tocar inline-flex items-center gap-2 px-4 py-2 rounded-md bg-acento-ambar-fuerte hover:bg-acento-ambar text-base-blanco font-bold text-xs shadow-sm"
           >
             Continuar: {{ recommendedActivity.title }}
           </NuxtLink>
@@ -152,26 +160,31 @@
           </span>
         </div>
 
-        <div v-else-if="chooseManually" class="flex flex-col gap-2">
-          <p v-if="isLoadingActivities" class="text-xs text-base-texto-secundario">Cargando actividades...</p>
+        <TransitionGroup
+          v-else-if="chooseManually"
+          name="list-reorder"
+          tag="div"
+          class="flex flex-col gap-2">
+          <p v-if="isLoadingActivities" key="loading" class="text-xs text-base-texto-secundario">Cargando actividades...</p>
           <NuxtLink
             v-for="activity in unitActivities"
             :key="activity.id"
             :to="`/estudiante/evaluacion/${activity.id}`"
-            class="text-xs font-semibold text-acento-ambar-fuerte hover:underline">
-            {{ activity.title }}
+            class="p-2.5 rounded-lg bg-base-blanco border border-base-borde-sutil hover:border-acento-ambar-fuerte hover:shadow-xs active:scale-[0.98] transition-all duration-150 text-xs font-semibold text-acento-ambar-fuerte flex items-center justify-between">
+            <span>{{ activity.title }}</span>
+            <span class="text-xs text-acento-ambar-fuerte">➔</span>
           </NuxtLink>
-        </div>
+        </TransitionGroup>
 
         <p v-else class="text-xs text-base-texto-secundario">
           Todavía no hay una actividad publicada para esta unidad.
         </p>
       </section>
 
-      <div class="pt-4 border-t border-base-borde-sutil flex items-center justify-between">
+      <div class="pt-4 border-t border-base-borde-sutil flex items-center justify-between anim-subir" style="--stagger: 4">
         <NuxtLink
           to="/estudiante"
-          class="borde-afordancia px-4 py-2 rounded-md text-xs font-semibold bg-base-blanco text-base-texto-primario">
+          class="borde-afordancia px-4 py-2 rounded-md text-xs font-semibold bg-base-blanco text-base-texto-primario active:scale-[0.98] transition-all duration-150 hover:shadow-xs">
           ◀ Volver al Menú
         </NuxtLink>
       </div>

@@ -166,7 +166,7 @@
             type="button"
             @click="handleRun"
             :disabled="workspaceStore.isRunning || workspaceStore.isSubmitting || isHtmlEmpty"
-            class="borde-afordancia px-3 py-1.5 rounded text-xs font-bold text-base-texto-primario bg-base-blanco hover:bg-base-bg-secundario transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            class="borde-afordancia px-3 py-1.5 rounded text-xs font-bold text-base-texto-primario bg-base-blanco hover:bg-base-bg-secundario active:scale-[0.98] transition-all duration-150 flex items-center gap-1.5 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
             :title="isHtmlEmpty ? 'El HTML no puede estar vacío' : 'Evalúa contra las reglas públicas sin consumir intentos'">
             <span v-if="workspaceStore.isRunning" class="animate-spin">⚙️</span>
             <span v-else>▶</span>
@@ -177,7 +177,7 @@
             type="button"
             @click="handleSubmit"
             :disabled="workspaceStore.isRunning || workspaceStore.isSubmitting || isHtmlEmpty"
-            class="px-3.5 py-1.5 rounded text-xs font-bold text-base-blanco bg-acento-ambar-fuerte hover:bg-acento-ambar transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            class="boton-tocar px-3.5 py-1.5 rounded text-xs font-bold text-base-blanco bg-acento-ambar-fuerte hover:bg-acento-ambar flex items-center gap-1.5 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
             :title="isHtmlEmpty ? 'El HTML no puede estar vacío' : 'Envía tu solución definitiva para calificación'">
             <span v-if="workspaceStore.isSubmitting" class="animate-spin">⏳</span>
             <span>Entregar solución</span>

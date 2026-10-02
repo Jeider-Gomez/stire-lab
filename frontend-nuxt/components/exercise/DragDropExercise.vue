@@ -8,26 +8,28 @@
 
     <!-- Elementos sin ubicar -->
     <div
-      class="min-h-[3.5rem] rounded-xl border-2 border-dashed p-3 flex flex-wrap gap-2 transition-colors"
+      class="min-h-[3.5rem] rounded-xl border-2 border-dashed p-3 transition-colors"
       :class="dragOver === TRAY ? 'border-acento-ambar-fuerte bg-acento-ambar/5' : 'border-base-borde-sutil bg-base-bg-secundario/50'"
       @dragover.prevent="dragOver = TRAY"
       @dragleave="dragOver = null"
       @drop.prevent="dropOn(null)"
       aria-label="Elementos por ubicar">
-      <button
-        v-for="item in unplaced"
-        :key="item.id"
-        type="button"
-        draggable="true"
-        @dragstart="onDragStart(item.id)"
-        @dragend="dragOver = null"
-        @click="toggleSelect(item.id)"
-        :aria-pressed="selected === item.id"
-        class="px-3 py-1.5 rounded-lg border text-xs font-mono cursor-grab active:cursor-grabbing shadow-xs transition focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
-        :class="selected === item.id ? 'bg-acento-ambar-fuerte text-base-blanco border-acento-ambar-fuerte' : 'bg-base-blanco text-base-texto-primario border-base-borde-fuerte hover:border-acento-ambar-fuerte'">
-        {{ item.content }}
-      </button>
-      <p v-if="unplaced.length === 0" class="text-xs text-semantico-pasa self-center">Ubicaste todos los elementos. Revisa y entrega cuando quieras.</p>
+      <TransitionGroup name="list-reorder" tag="div" class="flex flex-wrap gap-2">
+        <button
+          v-for="item in unplaced"
+          :key="item.id"
+          type="button"
+          draggable="true"
+          @dragstart="onDragStart(item.id)"
+          @dragend="dragOver = null"
+          @click="toggleSelect(item.id)"
+          :aria-pressed="selected === item.id"
+          class="px-3 py-1.5 rounded-lg border text-xs font-mono cursor-grab active:cursor-grabbing shadow-xs transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
+          :class="selected === item.id ? 'bg-acento-ambar-fuerte text-base-blanco border-acento-ambar-fuerte scale-105 shadow-sm' : 'bg-base-blanco text-base-texto-primario border-base-borde-fuerte hover:border-acento-ambar-fuerte hover:shadow-2xs'">
+          {{ item.content }}
+        </button>
+      </TransitionGroup>
+      <p v-if="unplaced.length === 0" class="text-xs text-semantico-pasa self-center pt-1">Ubicaste todos los elementos. Revisa y entrega cuando quieras.</p>
     </div>
 
     <!-- Categorías -->
@@ -35,7 +37,7 @@
       <div
         v-for="target in targets"
         :key="target.id"
-        class="rounded-xl border-2 p-3 min-h-[7rem] flex flex-col gap-2 transition-colors"
+        class="rounded-xl border-2 p-3 min-h-[7rem] flex flex-col gap-2 transition-colors duration-200"
         :class="dragOver === target.id ? 'border-acento-ambar-fuerte bg-acento-ambar/5' : 'border-base-borde-sutil bg-base-blanco'"
         @dragover.prevent="dragOver = target.id"
         @dragleave="dragOver = null"
@@ -44,12 +46,12 @@
           type="button"
           @click="placeSelected(target.id)"
           :disabled="!selected"
-          class="text-left text-xs font-bold text-base-texto-primario rounded focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte disabled:cursor-default"
+          class="text-left text-xs font-bold text-base-texto-primario rounded focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte disabled:cursor-default active:scale-[0.98] transition-transform duration-150"
           :aria-label="selected ? `Poner el elemento seleccionado en ${target.label}` : target.label">
           {{ target.label }}
           <span v-if="selected" class="block text-[10px] font-normal text-acento-ambar-fuerte">Toca aquí para ponerlo</span>
         </button>
-        <div class="flex flex-wrap gap-1.5">
+        <TransitionGroup name="list-reorder" tag="div" class="flex flex-wrap gap-1.5">
           <button
             v-for="item in placedIn(target.id)"
             :key="item.id"
@@ -58,12 +60,12 @@
             @dragstart="onDragStart(item.id)"
             @dragend="dragOver = null"
             @click="unplace(item.id)"
-            class="px-2.5 py-1 rounded-md border border-acento-ambar-fuerte/40 bg-acento-ambar/10 text-xs font-mono text-base-texto-primario hover:bg-acento-ambar/20 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
+            class="px-2.5 py-1 rounded-md border border-acento-ambar-fuerte/40 bg-acento-ambar/10 text-xs font-mono text-base-texto-primario hover:bg-acento-ambar/20 hover:border-acento-ambar-fuerte active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-acento-ambar-fuerte"
             :aria-label="`${item.content}, en ${target.label}. Toca para devolverlo`"
             title="Toca para devolverlo">
             {{ item.content }}
           </button>
-        </div>
+        </TransitionGroup>
       </div>
     </div>
 

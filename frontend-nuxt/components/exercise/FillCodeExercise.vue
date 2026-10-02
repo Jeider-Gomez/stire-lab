@@ -11,7 +11,7 @@
     </div>
 
     <!-- Bloque de código con inputs insertados en los blanks -->
-    <div class="bg-editor-bg text-editor-text rounded-lg p-4 font-mono text-xs overflow-x-auto shadow-inner border border-editor-border">
+    <div class="bg-editor-bg text-editor-text rounded-lg p-4 font-mono text-xs overflow-x-auto shadow-inner border border-editor-border anim-subir" style="--stagger: 1">
       <div v-for="(line, lineIdx) in parsedLines" :key="lineIdx" class="leading-7 min-h-[1.75rem] flex flex-wrap items-center">
         <template v-for="(token, tokenIdx) in line" :key="tokenIdx">
           <!-- Fragmento de código normal (resaltado con fallback a texto plano) -->
@@ -30,7 +30,7 @@
               :id="`blank-${token.id}`"
               v-model="blankAnswers[token.id]"
               :placeholder="token.id"
-              class="px-2 py-0.5 bg-editor-line text-stire-teal font-mono text-xs border border-slate-600 focus:border-stire-teal focus:outline-none focus:ring-1 focus:ring-stire-teal/60 rounded transition-colors text-center"
+              class="px-2 py-0.5 bg-editor-line text-stire-teal font-mono text-xs border border-slate-600 focus:border-stire-teal focus:outline-none focus:ring-2 focus:ring-stire-teal/60 rounded transition-all duration-150 text-center focus:scale-[1.02]"
               :style="{ width: `${Math.max(60, (blankAnswers[token.id]?.length || token.id.length || 4) * 10 + 20)}px` }"
             />
           </span>

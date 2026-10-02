@@ -11,15 +11,15 @@
     </div>
 
     <!-- Lista de bloques reordenables -->
-    <div class="space-y-2">
+    <TransitionGroup name="list-reorder" tag="div" class="space-y-2">
       <div
         v-for="(block, index) in orderedBlocks"
         :key="block.id"
-        class="flex items-center justify-between p-3 rounded-lg border border-base-borde-sutil bg-base-blanco transition-all shadow-xs hover:border-acento-ambar/50"
+        class="flex items-center justify-between p-3 rounded-lg border border-base-borde-sutil bg-base-blanco transition-all duration-150 shadow-xs hover:border-acento-ambar-fuerte/60 hover:shadow-sm"
       >
         <div class="flex items-center gap-3 flex-1">
           <!-- Indicador de posición -->
-          <span class="w-6 h-6 rounded-full bg-acento-ambar/10 text-acento-ambar-fuerte font-mono text-xs font-bold flex items-center justify-center flex-shrink-0 border border-acento-ambar/30">
+          <span class="w-6 h-6 rounded-full bg-acento-ambar/10 text-acento-ambar-fuerte font-mono text-xs font-bold flex items-center justify-center flex-shrink-0 border border-acento-ambar/30 transition-transform duration-150">
             {{ index + 1 }}
           </span>
 
@@ -30,13 +30,14 @@
         </div>
 
         <!-- Botones para subir / bajar -->
-        <div class="flex items-center gap-1 ml-3">
+        <div class="flex items-center gap-1.5 ml-3">
           <button
             type="button"
             @click="moveUp(index)"
             :disabled="index === 0"
-            class="p-1.5 rounded text-xs border border-base-borde-sutil hover:bg-base-bg-secundario disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-base-texto-primario"
+            class="p-1.5 rounded text-xs border border-base-borde-sutil hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100 transition-all duration-150 text-base-texto-primario focus:outline-none focus:ring-1 focus:ring-acento-ambar-fuerte"
             title="Mover arriba"
+            aria-label="Mover arriba"
           >
             ⬆
           </button>
@@ -44,14 +45,15 @@
             type="button"
             @click="moveDown(index)"
             :disabled="index === orderedBlocks.length - 1"
-            class="p-1.5 rounded text-xs border border-base-borde-sutil hover:bg-base-bg-secundario disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-base-texto-primario"
+            class="p-1.5 rounded text-xs border border-base-borde-sutil hover:bg-base-bg-secundario hover:border-acento-ambar-fuerte active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100 transition-all duration-150 text-base-texto-primario focus:outline-none focus:ring-1 focus:ring-acento-ambar-fuerte"
             title="Mover abajo"
+            aria-label="Mover abajo"
           >
             ⬇
           </button>
         </div>
       </div>
-    </div>
+    </TransitionGroup>
 
     <!-- Estado -->
     <div class="text-[11px] text-base-texto-secundario flex items-center justify-between pt-1">
